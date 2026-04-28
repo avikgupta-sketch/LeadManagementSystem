@@ -1,0 +1,15 @@
+﻿@model LMS.Models.DTOs.User.CreateManagerDto
+
+<h2>Managers</h2>
+
+<form asp-action="CreateManager" method="post">
+    <input asp-for="FullName" placeholder="Full Name" />
+    <input asp-for="Email" placeholder="Email" />
+    <input asp-for="Password" placeholder="Password" type="password" />
+    <button type="submit">Create Manager</button>
+</form>
+
+@if (TempData["Error"] != null)
+{
+    <p style="color:red">@TempData["Error"]</p>
+}

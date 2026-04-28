@@ -1,0 +1,37 @@
+﻿@model List<LMS.Models.Entities.Lead>
+@using LMS.Models.Enums
+
+<h2>My Leads</h2>
+
+<table border="1">
+    <tr>
+        <th>Title</th>
+        <th>Status</th>
+        <th>Update</th>
+    </tr>
+
+    @foreach (var lead in Model)
+    {
+        <tr>
+            <td>@lead.Title</td>
+            <td>@lead.Status</td>
+
+            <td>
+                <form asp-action="UpdateStatus" method="post">
+                    <input type="hidden" name="LeadId" value="@lead.Id" />
+
+                    <select name="NewStatus">
+                        @foreach (var status in Enum.GetValues(typeof(LeadStatus)))
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </select>
+
+                    <input type="text" name="Remark" placeholder="Enter remark" />
+
+                    <button type="submit">Update</button>
+                </form>
+            </td>
+        </tr>
+    }
+</table>
