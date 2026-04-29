@@ -2,86 +2,97 @@
 @using LMS.Models.Enums
 
 @{
-    ViewData["Title"] = "Leads";
+    ViewData["Title"] = "All Leads";
     var agents = ViewBag.Agents as List<(int Id, string Name)> ?? new List<(int, string)>();
 }
 
-<h2 class="mb-4">All Leads</h2>
+<div class="lms-topbar">
+    <div>
+        <h1 class="lms-page-title">All Leads</h1>
+        <div class="lms-page-sub">Track and reassign leads across your team</div>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ New Lead</a>
+</div>
 
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
 
-@if (!Model.Any())
-{
-    <p class="text-muted">No leads yet.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Assigned Agent</th>
-                <th style="min-width:280px">Reassign</th>
-                <th class="text-end">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var lead in Model)
+<div class="card">
+    <div class="card-header">@Model.Count lead@(Model.Count == 1 ? "" : "s")</div>
+    <div class="card-body p-0">
+        @if (!Model.Any())
         {
-            bool isTerminal = lead.Status == LeadStatus.Converted
-                              || lead.Status == LeadStatus.Closed
-                              || lead.Status == LeadStatus.Rejected;
-
-            <tr>
-                <td>@lead.Title</td>
-                <td><span class="badge bg-secondary">@lead.Status</span></td>
-                <td>@(lead.AssignedAgent?.FullName ?? $"Agent #{lead.AssignedAgentId}")</td>
-
-                <td>
-                    @if (!isTerminal)
-                    {
-                        <form asp-action="Reassign" method="post" class="d-flex gap-2">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="LeadId" value="@lead.Id" />
-                            <select name="NewAgentId" class="form-select form-select-sm" required>
-                                <option value="">-- Choose agent --</option>
-                                @foreach (var a in agents.Where(x => x.Id != lead.AssignedAgentId))
-                                {
-                                    <option value="@a.Id">@a.Name</option>
-                                }
-                            </select>
-                            <button type="submit" class="btn btn-sm btn-outline-primary">Go</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <span class="text-muted small">Locked</span>
-                    }
-                </td>
-
-                <td class="text-end">
-                    <a class="btn btn-sm btn-outline-secondary"
-                       asp-action="Detail" asp-route-id="@lead.Id">View</a>
-
-                    @if (!isTerminal)
-                    {
-                        <a class="btn btn-sm btn-outline-primary"
-                           asp-action="Edit" asp-route-id="@lead.Id">Edit</a>
-                    }
-
-                    <form asp-action="Delete" method="post" class="d-inline"
-                          onsubmit="return confirm('Delete this lead?');">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@lead.Id" />
-                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                    </form>
-                </td>
-            </tr>
+            <p class="p-4 text-muted mb-0 text-center">No leads yet. Create your first one.</p>
         }
-        </tbody>
-    </table>
-}
+        else
+        {
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Assigned Agent</th>
+                        <th style="min-width:280px">Reassign</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var lead in Model)
+                {
+                    bool isTerminal = lead.Status == LeadStatus.Converted
+                                      || lead.Status == LeadStatus.Closed
+                                      || lead.Status == LeadStatus.Rejected;
+
+                    <tr>
+                        <td><strong>@lead.Title</strong></td>
+                        <td><span class="lms-badge lms-badge-@lead.Status">@lead.Status</span></td>
+                        <td class="text-muted">@(lead.AssignedAgent?.FullName ?? $"Agent #{lead.AssignedAgentId}")</td>
+
+                        <td>
+                            @if (!isTerminal)
+                            {
+                                <form asp-action="Reassign" method="post" class="d-flex gap-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="LeadId" value="@lead.Id" />
+                                    <select name="NewAgentId" class="form-select form-select-sm" required>
+                                        <option value="">-- Choose agent --</option>
+                                        @foreach (var a in agents.Where(x => x.Id != lead.AssignedAgentId))
+                                        {
+                                            <option value="@a.Id">@a.Name</option>
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Go</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">Locked</span>
+                            }
+                        </td>
+
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary"
+                               asp-action="Detail" asp-route-id="@lead.Id">View</a>
+
+                            @if (!isTerminal)
+                            {
+                                <a class="btn btn-sm btn-outline-primary"
+                                   asp-action="Edit" asp-route-id="@lead.Id">Edit</a>
+                            }
+
+                            <form asp-action="Delete" method="post" class="d-inline"
+                                  onsubmit="return confirm('Delete this lead?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@lead.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

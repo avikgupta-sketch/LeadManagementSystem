@@ -4,57 +4,86 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<h2 class="mb-4">Dashboard</h2>
+<div class="lms-topbar">
+    <div>
+        <h1 class="lms-page-title">Dashboard</h1>
+        <div class="lms-page-sub">Overview of your leads at a glance</div>
+    </div>
+</div>
 
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card text-bg-primary">
-            <div class="card-body">
-                <h6 class="card-title">Total Leads</h6>
-                <h3 class="mb-0">@Model.TotalLeads</h3>
+    <div class="col-md-4 col-lg-3">
+        <div class="lms-stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="lms-stat-label">Total Leads</div>
+                <div class="lms-stat-value">@Model.TotalLeads</div>
             </div>
+            <div class="lms-stat-accent" style="background:linear-gradient(135deg,#4f46e5,#06b6d4);">📋</div>
         </div>
     </div>
 
     @if (User.IsInRole("Manager"))
     {
-        <div class="col-md-3">
-            <div class="card text-bg-info">
-                <div class="card-body">
-                    <h6 class="card-title">My Agents</h6>
-                    <h3 class="mb-0">@Model.TotalAgents</h3>
+        <div class="col-md-4 col-lg-3">
+            <div class="lms-stat-card d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="lms-stat-label">My Agents</div>
+                    <div class="lms-stat-value">@Model.TotalAgents</div>
                 </div>
+                <div class="lms-stat-accent" style="background:linear-gradient(135deg,#06b6d4,#10b981);">🧑‍💼</div>
             </div>
         </div>
     }
+
+    <div class="col-md-4 col-lg-3">
+        <div class="lms-stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="lms-stat-label">Converted</div>
+                <div class="lms-stat-value">@Model.Converted</div>
+            </div>
+            <div class="lms-stat-accent" style="background:linear-gradient(135deg,#10b981,#34d399);">✓</div>
+        </div>
+    </div>
+
+    <div class="col-md-4 col-lg-3">
+        <div class="lms-stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="lms-stat-label">Open</div>
+                <div class="lms-stat-value">@(Model.New + Model.InProgress + Model.FollowUp + Model.Interested)</div>
+            </div>
+            <div class="lms-stat-accent" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);">⏳</div>
+        </div>
+    </div>
 </div>
 
-<h4 class="mb-3">Leads by Status</h4>
+<div class="card">
+    <div class="card-header">Leads by Status</div>
+    <div class="card-body">
+        <div class="row g-3">
+            @{
+                var stats = new (string Label, int Count, string CssClass)[]
+                {
+                    ("New",            Model.New,           "lms-badge-New"),
+                    ("In Progress",    Model.InProgress,    "lms-badge-InProgress"),
+                    ("Follow Up",      Model.FollowUp,      "lms-badge-FollowUp"),
+                    ("Interested",     Model.Interested,    "lms-badge-Interested"),
+                    ("Not Interested", Model.NotInterested, "lms-badge-NotInterested"),
+                    ("Converted",      Model.Converted,     "lms-badge-Converted"),
+                    ("Closed",         Model.Closed,        "lms-badge-Closed"),
+                    ("Rejected",       Model.Rejected,      "lms-badge-Rejected"),
+                };
+            }
 
-<div class="row g-3">
-    @{
-        var stats = new (string Label, int Count, string Color)[]
-        {
-            ("New",           Model.New,           "secondary"),
-            ("In Progress",   Model.InProgress,    "primary"),
-            ("Follow Up",     Model.FollowUp,      "info"),
-            ("Interested",    Model.Interested,    "success"),
-            ("Not Interested",Model.NotInterested, "warning"),
-            ("Converted",     Model.Converted,     "success"),
-            ("Closed",        Model.Closed,        "dark"),
-            ("Rejected",      Model.Rejected,      "danger"),
-        };
-    }
-
-    @foreach (var s in stats)
-    {
-        <div class="col-md-3">
-            <div class="card border-@s.Color">
-                <div class="card-body">
-                    <h6 class="card-title text-@s.Color">@s.Label</h6>
-                    <h4 class="mb-0">@s.Count</h4>
+            @foreach (var s in stats)
+            {
+                <div class="col-6 col-md-3">
+                    <div class="d-flex justify-content-between align-items-center p-3 rounded"
+                         style="border:1px solid var(--lms-border);">
+                        <span class="lms-badge @s.CssClass">@s.Label</span>
+                        <span style="font-weight:700; font-size:1.1rem;">@s.Count</span>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
-    }
+    </div>
 </div>

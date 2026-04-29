@@ -4,7 +4,12 @@
     ViewData["Title"] = "Managers";
 }
 
-<h2 class="mb-4">Managers</h2>
+<div class="lms-topbar">
+    <div>
+        <h1 class="lms-page-title">Managers</h1>
+        <div class="lms-page-sub">Create and manage manager accounts</div>
+    </div>
+</div>
 
 @if (TempData["Error"] != null)
 {
@@ -12,7 +17,7 @@
 }
 
 <div class="card mb-4">
-    <div class="card-header"><strong>Create new Manager</strong></div>
+    <div class="card-header">Create new Manager</div>
     <div class="card-body">
         <form asp-action="CreateManager" method="post" class="row g-2">
             @Html.AntiForgeryToken()
@@ -33,15 +38,15 @@
 </div>
 
 <div class="card">
-    <div class="card-header"><strong>All Managers</strong></div>
+    <div class="card-header">All Managers (@Model.Count)</div>
     <div class="card-body p-0">
         @if (!Model.Any())
         {
-            <p class="p-3 text-muted mb-0">No managers yet.</p>
+            <p class="p-4 text-muted mb-0 text-center">No managers yet. Create one above.</p>
         }
         else
         {
-            <table class="table table-striped mb-0">
+            <table class="table mb-0">
                 <thead>
                     <tr>
                         <th>Full Name</th>
@@ -53,8 +58,15 @@
                 @foreach (var m in Model)
                 {
                     <tr>
-                        <td>@m.FullName</td>
-                        <td>@m.Email</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="lms-avatar" style="width:30px;height:30px;font-size:.75rem;">
+                                    @(string.IsNullOrEmpty(m.FullName) ? "?" : m.FullName.Substring(0, 1).ToUpper())
+                                </div>
+                                <span>@m.FullName</span>
+                            </div>
+                        </td>
+                        <td class="text-muted">@m.Email</td>
                         <td class="text-end">
                             <a class="btn btn-sm btn-outline-primary"
                                asp-action="EditManager" asp-route-id="@m.Id">Edit</a>

@@ -6,7 +6,12 @@
     bool isManager = User.IsInRole("Manager");
 }
 
-<h2 class="mb-4">Create Lead</h2>
+<div class="lms-topbar">
+    <div>
+        <h1 class="lms-page-title">Create Lead</h1>
+        <div class="lms-page-sub">Add a new lead to the pipeline</div>
+    </div>
+</div>
 
 @if (TempData["Error"] != null)
 {
@@ -16,25 +21,27 @@
 @if (isManager && !agents.Any())
 {
     <div class="alert alert-warning">
-        You don't have any agents yet. <a asp-controller="User" asp-action="Agents">Create an agent</a> first.
+        You don't have any agents yet.
+        <a asp-controller="User" asp-action="Agents" class="alert-link">Create an agent</a> first.
     </div>
 }
 
-<div class="card" style="max-width:600px">
+<div class="card" style="max-width:640px">
     <div class="card-body">
         <form asp-action="Create" method="post">
             @Html.AntiForgeryToken()
 
             <div class="mb-3">
                 <label class="form-label">Title</label>
-                <input asp-for="Title" class="form-control" required />
-                <span asp-validation-for="Title" class="text-danger"></span>
+                <input asp-for="Title" class="form-control" required placeholder="e.g. Demo with Acme Corp" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Description</label>
-                <textarea asp-for="Description" class="form-control" rows="3" required></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
+                <textarea asp-for="Description" class="form-control" rows="4" required
+                          placeholder="Brief details about this lead"></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
             </div>
 
             @if (isManager)
@@ -48,7 +55,7 @@
                             <option value="@agent.Id">@agent.Name</option>
                         }
                     </select>
-                    <span asp-validation-for="AssignedAgentId" class="text-danger"></span>
+                    <span asp-validation-for="AssignedAgentId" class="text-danger small"></span>
                 </div>
             }
 

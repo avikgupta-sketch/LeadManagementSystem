@@ -1,22 +1,395 @@
-html {
-  font-size: 14px;
+/* ============================================================
+   LMS — Modern UI theme
+   ============================================================ */
+
+:root {
+    --lms-bg:        #f4f6fb;
+    --lms-surface:   #ffffff;
+    --lms-border:    #e6e8ef;
+    --lms-text:      #1f2937;
+    --lms-muted:     #6b7280;
+    --lms-primary:   #4f46e5;
+    --lms-primary-2: #6366f1;
+    --lms-accent:    #06b6d4;
+    --lms-success:   #10b981;
+    --lms-warning:   #f59e0b;
+    --lms-danger:    #ef4444;
+    --lms-sidebar-bg-1: #1e1b4b;
+    --lms-sidebar-bg-2: #312e81;
+    --lms-radius:    12px;
+    --lms-shadow-sm: 0 1px 2px rgba(15, 23, 42, .04), 0 1px 3px rgba(15, 23, 42, .06);
+    --lms-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, .08), 0 2px 4px -2px rgba(15, 23, 42, .06);
+    --lms-shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, .10), 0 8px 10px -6px rgba(15, 23, 42, .08);
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
+html { font-size: 15px; }
+@media (min-width: 768px) { html { font-size: 16px; } }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+html, body {
+    height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin: 0;
+    background: var(--lms-bg);
+    color: var(--lms-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   Layout shell
+   ============================================================ */
+
+.lms-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.lms-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, var(--lms-sidebar-bg-1) 0%, var(--lms-sidebar-bg-2) 100%);
+    color: #e5e7eb;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+.lms-brand {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .25rem .5rem 1.25rem .5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    margin-bottom: 1rem;
+}
+
+.lms-brand-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--lms-primary), var(--lms-accent));
+    display: grid;
+    place-items: center;
+    color: white;
+    font-weight: 700;
+    box-shadow: var(--lms-shadow-md);
+}
+
+.lms-brand-text {
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: .3px;
+}
+
+.lms-nav { display: flex; flex-direction: column; gap: .25rem; }
+
+.lms-nav-link {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    color: rgba(229, 231, 235, .85);
+    padding: .6rem .8rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: .94rem;
+    transition: background .15s ease, color .15s ease, transform .15s ease;
+}
+
+.lms-nav-link:hover {
+    background: rgba(255, 255, 255, .08);
+    color: #ffffff;
+    transform: translateX(2px);
+}
+
+.lms-nav-link .ico {
+    width: 18px;
+    height: 18px;
+    opacity: .9;
+}
+
+.lms-sidebar-foot {
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    padding-top: 1rem;
+    font-size: .9rem;
+}
+
+.lms-user {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .75rem;
+}
+
+.lms-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--lms-accent), var(--lms-primary-2));
+    color: white;
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    font-size: .85rem;
+}
+
+.lms-user-meta { line-height: 1.1; }
+.lms-user-meta .name { font-weight: 600; color: #ffffff; }
+.lms-user-meta .role { font-size: .75rem; color: rgba(229, 231, 235, .7); }
+
+.lms-logout {
+    background: rgba(239, 68, 68, .15);
+    color: #fecaca;
+    border: 1px solid rgba(239, 68, 68, .3);
+    padding: .45rem .75rem;
+    border-radius: 8px;
+    width: 100%;
+    font-size: .88rem;
+    transition: background .15s ease;
+}
+.lms-logout:hover {
+    background: rgba(239, 68, 68, .28);
+    color: #ffffff;
+}
+
+.lms-main {
+    flex: 1 1 auto;
+    padding: 1.75rem 2rem;
+    overflow-x: auto;
+}
+
+.lms-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.lms-page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--lms-text);
+}
+
+.lms-page-sub {
+    color: var(--lms-muted);
+    font-size: .9rem;
+    margin-top: .25rem;
+}
+
+/* ============================================================
+   Cards
+   ============================================================ */
+
+.card {
+    background: var(--lms-surface);
+    border: 1px solid var(--lms-border);
+    border-radius: var(--lms-radius);
+    box-shadow: var(--lms-shadow-sm);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--lms-border);
+    font-weight: 600;
+    padding: .9rem 1.1rem;
+}
+
+.card-body { padding: 1.1rem; }
+
+.lms-stat-card {
+    border-radius: var(--lms-radius);
+    border: 1px solid var(--lms-border);
+    background: var(--lms-surface);
+    padding: 1.1rem 1.2rem;
+    box-shadow: var(--lms-shadow-sm);
+    transition: transform .15s ease, box-shadow .15s ease;
+    height: 100%;
+}
+.lms-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--lms-shadow-md);
+}
+
+.lms-stat-label {
+    color: var(--lms-muted);
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 600;
+}
+
+.lms-stat-value {
+    font-size: 1.85rem;
+    font-weight: 700;
+    margin-top: .25rem;
+    color: var(--lms-text);
+}
+
+.lms-stat-accent {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    color: white;
+    font-weight: 700;
+}
+
+/* ============================================================
+   Tables
+   ============================================================ */
+
+.table {
+    margin-bottom: 0;
+}
+.table thead th {
+    background: #f9fafb;
+    color: var(--lms-muted);
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 1px solid var(--lms-border);
+    padding: .8rem 1rem;
+}
+.table tbody td {
+    padding: .85rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--lms-border);
+}
+.table tbody tr:last-child td { border-bottom: none; }
+.table tbody tr:hover { background: #f9fafb; }
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: .5rem .9rem;
+    transition: filter .15s ease, transform .15s ease;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+    background: var(--lms-primary);
+    border-color: var(--lms-primary);
+}
+.btn-primary:hover {
+    background: var(--lms-primary-2);
+    border-color: var(--lms-primary-2);
+}
+
+.btn-outline-primary {
+    color: var(--lms-primary);
+    border-color: var(--lms-primary);
+}
+.btn-outline-primary:hover {
+    background: var(--lms-primary);
+    border-color: var(--lms-primary);
+    color: #fff;
+}
+
+.btn-sm { padding: .35rem .65rem; font-size: .82rem; }
+
+/* ============================================================
+   Status badges
+   ============================================================ */
+
+.lms-badge {
+    display: inline-block;
+    padding: .3rem .65rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    line-height: 1;
+}
+.lms-badge-New          { background: #e0e7ff; color: #3730a3; }
+.lms-badge-InProgress   { background: #dbeafe; color: #1e40af; }
+.lms-badge-FollowUp     { background: #cffafe; color: #155e75; }
+.lms-badge-Interested   { background: #d1fae5; color: #065f46; }
+.lms-badge-NotInterested{ background: #fef3c7; color: #92400e; }
+.lms-badge-Converted    { background: #dcfce7; color: #14532d; }
+.lms-badge-Closed       { background: #e5e7eb; color: #374151; }
+.lms-badge-Rejected     { background: #fee2e2; color: #991b1b; }
+
+/* ============================================================
+   Forms
+   ============================================================ */
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid var(--lms-border);
+    padding: .55rem .8rem;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--lms-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+}
+.form-label { font-weight: 500; color: var(--lms-text); }
+
+.alert { border-radius: 10px; border: none; }
+.alert-danger { background: #fee2e2; color: #991b1b; }
+.alert-warning { background: #fef3c7; color: #92400e; }
+
+/* ============================================================
+   Public/landing & login
+   ============================================================ */
+
+.lms-public-bg {
+    min-height: 100vh;
+    background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(99, 102, 241, .25), transparent 60%),
+        radial-gradient(900px 500px at 90% 110%, rgba(6, 182, 212, .25), transparent 60%),
+        linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+    color: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.lms-login-card {
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, .98);
+    color: var(--lms-text);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--lms-shadow-lg);
+}
+
+.lms-login-brand {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+}
+
+.lms-hero {
+    text-align: center;
+    color: #f1f5f9;
+    max-width: 720px;
+}
+.lms-hero h1 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    background: linear-gradient(90deg, #ffffff, #c4b5fd);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.lms-hero p {
+    color: rgba(241, 245, 249, .8);
+    font-size: 1.05rem;
+    margin-bottom: 2rem;
 }

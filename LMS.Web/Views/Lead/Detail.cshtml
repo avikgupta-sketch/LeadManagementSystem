@@ -4,56 +4,72 @@
     ViewData["Title"] = "Lead Detail";
 }
 
-<h2 class="mb-3">Lead Detail</h2>
-
-<div class="card mb-4" style="max-width:700px">
-    <div class="card-body">
-        <p><strong>Title:</strong> @Model.Title</p>
-        <p><strong>Description:</strong> @Model.Description</p>
-        <p><strong>Status:</strong> <span class="badge bg-secondary">@Model.Status</span></p>
+<div class="lms-topbar">
+    <div>
+        <h1 class="lms-page-title">@Model.Title</h1>
+        <div class="lms-page-sub">Lead detail and status history</div>
+    </div>
+    <div>
+        @if (User.IsInRole("Manager"))
+        {
+            <a asp-action="Index" class="btn btn-outline-primary">← Back to Leads</a>
+        }
+        else if (User.IsInRole("Agent"))
+        {
+            <a asp-action="MyLeads" class="btn btn-outline-primary">← Back to My Leads</a>
+        }
     </div>
 </div>
 
-<h4 class="mb-3">Remarks History</h4>
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <div class="lms-stat-label mb-1">Description</div>
+                <div>@Model.Description</div>
+            </div>
+            <div class="col-md-4">
+                <div class="lms-stat-label mb-1">Current status</div>
+                <span class="lms-badge lms-badge-@Model.Status">@Model.Status</span>
+            </div>
+        </div>
+    </div>
+</div>
 
-@if (!Model.Remarks.Any())
-{
-    <p class="text-muted">No remarks yet.</p>
-}
-else
-{
-    <table class="table table-bordered table-sm">
-        <thead class="table-light">
-            <tr>
-                <th>Date</th>
-                <th>Old Status</th>
-                <th>New Status</th>
-                <th>Changed By</th>
-                <th>Remark</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var r in Model.Remarks)
+<div class="card">
+    <div class="card-header">Remarks History (@Model.Remarks.Count)</div>
+    <div class="card-body p-0">
+        @if (!Model.Remarks.Any())
         {
-            <tr>
-                <td>@r.CreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
-                <td>@r.OldStatus</td>
-                <td>@r.NewStatus</td>
-                <td>@r.ChangedByName</td>
-                <td>@r.Remark</td>
-            </tr>
+            <p class="p-4 text-muted mb-0 text-center">No remarks yet.</p>
         }
-        </tbody>
-    </table>
-}
-
-<div class="mt-3">
-    @if (User.IsInRole("Manager"))
-    {
-        <a asp-action="Index" class="btn btn-outline-secondary">Back to Leads</a>
-    }
-    else if (User.IsInRole("Agent"))
-    {
-        <a asp-action="MyLeads" class="btn btn-outline-secondary">Back to My Leads</a>
-    }
+        else
+        {
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Old → New</th>
+                        <th>Changed By</th>
+                        <th>Remark</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Remarks)
+                {
+                    <tr>
+                        <td class="text-muted small">@r.CreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            <span class="lms-badge lms-badge-@r.OldStatus">@r.OldStatus</span>
+                            <span class="text-muted mx-1">→</span>
+                            <span class="lms-badge lms-badge-@r.NewStatus">@r.NewStatus</span>
+                        </td>
+                        <td>@r.ChangedByName</td>
+                        <td>@r.Remark</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
 </div>

@@ -11,26 +11,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - LMS</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="bg-light">
+<body>
 
-<div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+<div class="lms-public-bg">
+    <div class="lms-login-card">
 
-    <div class="card shadow p-4" style="width: 360px;">
-
-        <h3 class="text-center mb-4">LMS Login</h3>
+        <div class="lms-login-brand">
+            <div class="lms-brand-logo">L</div>
+            <div>
+                <div style="font-weight:700; font-size:1.15rem;">Lead Management</div>
+                <div style="font-size:.8rem; color:var(--lms-muted);">Sign in to your account</div>
+            </div>
+        </div>
 
         <form asp-action="Login" method="post">
             @Html.AntiForgeryToken()
 
             <div class="mb-3">
                 <label class="form-label">Email</label>
-                <input asp-for="Email" class="form-control" autocomplete="username" />
+                <input asp-for="Email" class="form-control" autocomplete="username"
+                       placeholder="you@company.com" />
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Password</label>
-                <input asp-for="Password" type="password" class="form-control" autocomplete="current-password" />
+                <input asp-for="Password" type="password" class="form-control"
+                       autocomplete="current-password" placeholder="••••••••" />
             </div>
 
             <div class="form-check mb-3">
@@ -38,13 +46,15 @@
                 <label class="form-check-label">Remember me</label>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Login</button>
+            <button type="submit" class="btn btn-primary w-100">Sign in</button>
 
-            <div asp-validation-summary="All" class="text-danger mt-3"></div>
+            <div asp-validation-summary="All" class="text-danger mt-3 small"></div>
         </form>
 
+        <p class="text-center text-muted small mt-4 mb-0">
+            Demo: <code>admin@lms.com</code> / <code>Admin@123</code>
+        </p>
     </div>
-
 </div>
 
 </body>

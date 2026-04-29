@@ -6,63 +6,102 @@
     <title>@ViewData["Title"] - LMS</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/LMS.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
 
-    <div class="d-flex">
+@{
+    string role = "User";
+    if (User.IsInRole("Admin")) { role = "Administrator"; }
+    else if (User.IsInRole("Manager")) { role = "Manager"; }
+    else if (User.IsInRole("Agent")) { role = "Agent"; }
 
-        <!-- Sidebar -->
-        <div class="bg-dark text-white p-3" style="width: 240px; min-height: 100vh;">
-            <h4 class="mb-4">LMS</h4>
+    string userName = User.Identity?.Name ?? "";
+    string initials = string.IsNullOrWhiteSpace(userName)
+        ? "U"
+        : new string(userName.Split('@')[0]
+            .Split(new[] {' ', '.', '_', '-'}, StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => char.ToUpper(s[0]))
+            .Take(2).ToArray());
+    if (string.IsNullOrEmpty(initials)) { initials = "U"; }
+}
 
+<div class="lms-shell">
+
+    <!-- Sidebar -->
+    <aside class="lms-sidebar">
+        <div class="lms-brand">
+            <div class="lms-brand-logo">L</div>
+            <div class="lms-brand-text">LMS</div>
+        </div>
+
+        <nav class="lms-nav">
             @if (User.Identity?.IsAuthenticated == true)
             {
-                <a class="nav-link text-white" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                <a class="lms-nav-link" asp-controller="Dashboard" asp-action="Index">
+                    <span class="ico">📊</span> Dashboard
+                </a>
             }
 
             @if (User.IsInRole("Admin"))
             {
-                <a class="nav-link text-white" asp-controller="User" asp-action="Managers">Managers</a>
+                <a class="lms-nav-link" asp-controller="User" asp-action="Managers">
+                    <span class="ico">👥</span> Managers
+                </a>
             }
 
             @if (User.IsInRole("Manager"))
             {
-                <a class="nav-link text-white" asp-controller="User" asp-action="Agents">My Agents</a>
-                <a class="nav-link text-white" asp-controller="Lead" asp-action="Index">Leads</a>
-                <a class="nav-link text-white" asp-controller="Lead" asp-action="Create">Create Lead</a>
+                <a class="lms-nav-link" asp-controller="User" asp-action="Agents">
+                    <span class="ico">🧑‍💼</span> My Agents
+                </a>
+                <a class="lms-nav-link" asp-controller="Lead" asp-action="Index">
+                    <span class="ico">📋</span> All Leads
+                </a>
+                <a class="lms-nav-link" asp-controller="Lead" asp-action="Create">
+                    <span class="ico">➕</span> New Lead
+                </a>
             }
 
             @if (User.IsInRole("Agent"))
             {
-                <a class="nav-link text-white" asp-controller="Lead" asp-action="MyLeads">My Leads</a>
-                <a class="nav-link text-white" asp-controller="Lead" asp-action="Create">Create Lead</a>
+                <a class="lms-nav-link" asp-controller="Lead" asp-action="MyLeads">
+                    <span class="ico">📋</span> My Leads
+                </a>
+                <a class="lms-nav-link" asp-controller="Lead" asp-action="Create">
+                    <span class="ico">➕</span> New Lead
+                </a>
             }
+        </nav>
 
-            <hr />
-
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <p class="small">Hi @User.Identity.Name</p>
-
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="lms-sidebar-foot">
+                <div class="lms-user">
+                    <div class="lms-avatar">@initials</div>
+                    <div class="lms-user-meta">
+                        <div class="name">@userName</div>
+                        <div class="role">@role</div>
+                    </div>
+                </div>
                 <form asp-controller="Auth" asp-action="Logout" method="post">
                     @Html.AntiForgeryToken()
-                    <button class="btn btn-danger w-100">Logout</button>
+                    <button class="lms-logout" type="submit">Logout</button>
                 </form>
-            }
+            </div>
+        }
+    </aside>
 
-        </div>
+    <!-- Main -->
+    <main class="lms-main">
+        @RenderBody()
+    </main>
 
-        <!-- Main -->
-        <div class="p-4 w-100">
-            @RenderBody()
-        </div>
+</div>
 
-    </div>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js"></script>
-    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
