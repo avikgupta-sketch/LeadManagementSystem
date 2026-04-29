@@ -73,7 +73,11 @@ public class LeadController : Controller
         var ok = await _mediator.Send(new CreateLeadCommand(dto, userId, managerId));
 
         if (!ok)
-            TempData["Error"] = "Could not create lead. Check that the selected agent belongs to you.";
+        {
+            TempData["Error"] = User.IsInRole("Agent")
+                ? "Could not create lead. Please try again or contact your manager."
+                : "Could not create lead. Make sure the selected agent belongs to your team.";
+        }
 
         return RedirectToAction(User.IsInRole("Agent") ? "MyLeads" : "Index");
     }
