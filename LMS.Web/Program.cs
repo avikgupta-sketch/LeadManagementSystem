@@ -1,4 +1,4 @@
-﻿using LMS.Data.Context;
+using LMS.Data.Context;
 using LMS.Data.Seeder;
 using LMS.Models.Entities;
 using MediatR;
@@ -10,7 +10,8 @@ using System.Reflection;
 using AutoMapper;
 var builder = WebApplication.CreateBuilder(args);
 
-// 🔹 Serilog
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
+
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
@@ -18,11 +19,9 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// 🔹 DB Context
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 🔹 Identity with INT keys
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -33,34 +32,28 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// 🔹 Cookie settings
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Auth/Login";
     options.AccessDeniedPath = "/Auth/Login";
 });
 
-// 🔹 MediatR
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(Assembly.Load("LMS.Handlers")));
 
-// 🔹 AutoMapper
-
 builder.Services.AddAutoMapper(cfg => { }, typeof(LMS.Handlers.AssemblyReference).Assembly);
-// 🔹 MVC + Razor
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
-// 🔹 Middleware
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -68,10 +61,12 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 🔹 Seed Database
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+
+    var db = services.GetRequiredService<AppDbContext>();
+    await db.Database.EnsureCreatedAsync();
 
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
@@ -80,11 +75,8 @@ using (var scope = app.Services.CreateScope())
     await DatabaseSeeder.SeedAsync(userManager, roleManager, config);
 }
 
-// 🔹 Routes
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-
 
 app.Run();
