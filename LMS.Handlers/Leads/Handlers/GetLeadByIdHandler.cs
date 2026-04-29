@@ -1,9 +1,9 @@
-﻿using LMS.Data.Context;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
+using LMS.Data.Context;
 using LMS.Handlers.Leads.Queries;
 using LMS.Models.DTOs.Lead;
 using LMS.Models.DTOs.LeadRemark;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace LMS.Handlers.Leads.Handlers;
 
@@ -19,10 +19,12 @@ public class GetLeadByIdHandler : IRequestHandler<GetLeadByIdQuery, LeadDetailDt
     public async Task<LeadDetailDto?> Handle(GetLeadByIdQuery request, CancellationToken cancellationToken)
     {
         var lead = await _context.Leads
+            .AsNoTracking()
             .Include(l => l.Remarks)
-            .ThenInclude(r => r.ChangedBy)
-            .FirstOrDefaultAsync(l => l.Id == request.LeadId);
+                .ThenInclude(r => r.ChangedBy)
+            .FirstOrDefaultAsync(l => l.Id == request.LeadId, cancellationToken);
 
+        // 🔴 NULL SAFETY
         if (lead == null)
             return null;
 
@@ -42,7 +44,8 @@ public class GetLeadByIdHandler : IRequestHandler<GetLeadByIdQuery, LeadDetailDt
                     OldStatus = r.OldStatus.ToString(),
                     NewStatus = r.NewStatus.ToString(),
                     CreatedDate = r.CreatedDate,
-                    ChangedByName = r.ChangedBy.FullName
+                    // 🔴 NULL SAFETY: ChangedBy may have been hidden by query filter
+                    ChangedByName = r.ChangedBy?.FullName ?? "Unknown"
                 }).ToList()
         };
     }

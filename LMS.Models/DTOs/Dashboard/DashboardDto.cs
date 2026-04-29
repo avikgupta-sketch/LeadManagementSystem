@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace LMS.Models.DTOs.Dashboard;
 
 public class DashboardDto
 {
+    public int TotalAgents { get; set; }   // 🔥 used by Manager dashboard
+
     public int TotalLeads { get; set; }
 
     public int New { get; set; }

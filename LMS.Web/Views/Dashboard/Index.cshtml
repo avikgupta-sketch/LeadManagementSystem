@@ -1,16 +1,60 @@
-﻿@model LMS.Models.DTOs.Dashboard.DashboardDto
+@model LMS.Models.DTOs.Dashboard.DashboardDto
 
-<h2>Dashboard</h2>
+@{
+    ViewData["Title"] = "Dashboard";
+}
 
-<div>
-    <p><strong>Total Leads:</strong> @Model.TotalLeads</p>
+<h2 class="mb-4">Dashboard</h2>
 
-    <p>New: @Model.New</p>
-    <p>InProgress: @Model.InProgress</p>
-    <p>FollowUp: @Model.FollowUp</p>
-    <p>Interested: @Model.Interested</p>
-    <p>NotInterested: @Model.NotInterested</p>
-    <p>Converted: @Model.Converted</p>
-    <p>Closed: @Model.Closed</p>
-    <p>Rejected: @Model.Rejected</p>
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-bg-primary">
+            <div class="card-body">
+                <h6 class="card-title">Total Leads</h6>
+                <h3 class="mb-0">@Model.TotalLeads</h3>
+            </div>
+        </div>
+    </div>
+
+    @if (User.IsInRole("Manager"))
+    {
+        <div class="col-md-3">
+            <div class="card text-bg-info">
+                <div class="card-body">
+                    <h6 class="card-title">My Agents</h6>
+                    <h3 class="mb-0">@Model.TotalAgents</h3>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<h4 class="mb-3">Leads by Status</h4>
+
+<div class="row g-3">
+    @{
+        var stats = new (string Label, int Count, string Color)[]
+        {
+            ("New",           Model.New,           "secondary"),
+            ("In Progress",   Model.InProgress,    "primary"),
+            ("Follow Up",     Model.FollowUp,      "info"),
+            ("Interested",    Model.Interested,    "success"),
+            ("Not Interested",Model.NotInterested, "warning"),
+            ("Converted",     Model.Converted,     "success"),
+            ("Closed",        Model.Closed,        "dark"),
+            ("Rejected",      Model.Rejected,      "danger"),
+        };
+    }
+
+    @foreach (var s in stats)
+    {
+        <div class="col-md-3">
+            <div class="card border-@s.Color">
+                <div class="card-body">
+                    <h6 class="card-title text-@s.Color">@s.Label</h6>
+                    <h4 class="mb-0">@s.Count</h4>
+                </div>
+            </div>
+        </div>
+    }
 </div>

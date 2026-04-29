@@ -1,35 +1,59 @@
-﻿@model LMS.Models.DTOs.Lead.CreateLeadDto
+@model LMS.Models.DTOs.Lead.CreateLeadDto
 
-<h2>Create Lead</h2>
+@{
+    ViewData["Title"] = "Create Lead";
+    var agents = ViewBag.Agents as List<(int Id, string Name)> ?? new List<(int, string)>();
+    bool isManager = User.IsInRole("Manager");
+}
 
-<form asp-action="Create" method="post">
-    <div>
-        <label>Title</label>
-        <input asp-for="Title" class="form-control" />
-    </div>
-
-    <div>
-        <label>Description</label>
-        <input asp-for="Description" />
-    </div>
-
-    <div>
-        <label>Select Agent</label>
-        <select asp-for="AssignedAgentId">
-            <option value="">-- Select Agent --</option>
-
-            @foreach (var agent in ViewBag.Agents)
-            {
-                <option value="@agent.Item1">@agent.Item2</option>
-            }
-        </select>
-    </div>
-
-    <button type="submit">Create Lead</button>
-</form>
-Give feedback
+<h2 class="mb-4">Create Lead</h2>
 
 @if (TempData["Error"] != null)
 {
-    <p style="color:red">@TempData["Error"]</p>
+    <div class="alert alert-danger">@TempData["Error"]</div>
 }
+
+@if (isManager && !agents.Any())
+{
+    <div class="alert alert-warning">
+        You don't have any agents yet. <a asp-controller="User" asp-action="Agents">Create an agent</a> first.
+    </div>
+}
+
+<div class="card" style="max-width:600px">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label class="form-label">Title</label>
+                <input asp-for="Title" class="form-control" required />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="3" required></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            @if (isManager)
+            {
+                <div class="mb-3">
+                    <label class="form-label">Assign to Agent</label>
+                    <select asp-for="AssignedAgentId" class="form-select" required>
+                        <option value="">-- Select Agent --</option>
+                        @foreach (var agent in agents)
+                        {
+                            <option value="@agent.Id">@agent.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="AssignedAgentId" class="text-danger"></span>
+                </div>
+            }
+
+            <button type="submit" class="btn btn-primary"
+                    @(isManager && !agents.Any() ? "disabled" : "")>Create Lead</button>
+        </form>
+    </div>
+</div>

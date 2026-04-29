@@ -1,29 +1,59 @@
-﻿@model LMS.Models.DTOs.Lead.LeadDetailDto
+@model LMS.Models.DTOs.Lead.LeadDetailDto
 
-<h2>Lead Detail</h2>
+@{
+    ViewData["Title"] = "Lead Detail";
+}
 
-<p><strong>Title:</strong> @Model.Title</p>
-<p><strong>Status:</strong> @Model.Status</p>
+<h2 class="mb-3">Lead Detail</h2>
 
-<h3>Remarks History</h3>
+<div class="card mb-4" style="max-width:700px">
+    <div class="card-body">
+        <p><strong>Title:</strong> @Model.Title</p>
+        <p><strong>Description:</strong> @Model.Description</p>
+        <p><strong>Status:</strong> <span class="badge bg-secondary">@Model.Status</span></p>
+    </div>
+</div>
 
-<table border="1">
-    <tr>
-        <th>Remark</th>
-        <th>Old Status</th>
-        <th>New Status</th>
-        <th>Changed By</th>
-        <th>Date</th>
-    </tr>
+<h4 class="mb-3">Remarks History</h4>
 
-    @foreach (var r in Model.Remarks)
+@if (!Model.Remarks.Any())
+{
+    <p class="text-muted">No remarks yet.</p>
+}
+else
+{
+    <table class="table table-bordered table-sm">
+        <thead class="table-light">
+            <tr>
+                <th>Date</th>
+                <th>Old Status</th>
+                <th>New Status</th>
+                <th>Changed By</th>
+                <th>Remark</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var r in Model.Remarks)
+        {
+            <tr>
+                <td>@r.CreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>@r.OldStatus</td>
+                <td>@r.NewStatus</td>
+                <td>@r.ChangedByName</td>
+                <td>@r.Remark</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+<div class="mt-3">
+    @if (User.IsInRole("Manager"))
     {
-        <tr>
-            <td>@r.Remark</td>
-            <td>@r.OldStatus</td>
-            <td>@r.NewStatus</td>
-            <td>@r.ChangedByName</td>
-            <td>@r.CreatedDate</td>
-        </tr>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back to Leads</a>
     }
-</table>
+    else if (User.IsInRole("Agent"))
+    {
+        <a asp-action="MyLeads" class="btn btn-outline-secondary">Back to My Leads</a>
+    }
+</div>

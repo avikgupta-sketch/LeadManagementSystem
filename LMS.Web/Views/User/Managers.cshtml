@@ -1,15 +1,75 @@
-﻿@model LMS.Models.DTOs.User.CreateManagerDto
+@model List<LMS.Models.DTOs.User.EditUserDto>
 
-<h2>Managers</h2>
+@{
+    ViewData["Title"] = "Managers";
+}
 
-<form asp-action="CreateManager" method="post">
-    <input asp-for="FullName" placeholder="Full Name" />
-    <input asp-for="Email" placeholder="Email" />
-    <input asp-for="Password" placeholder="Password" type="password" />
-    <button type="submit">Create Manager</button>
-</form>
+<h2 class="mb-4">Managers</h2>
 
 @if (TempData["Error"] != null)
 {
-    <p style="color:red">@TempData["Error"]</p>
+    <div class="alert alert-danger">@TempData["Error"]</div>
 }
+
+<div class="card mb-4">
+    <div class="card-header"><strong>Create new Manager</strong></div>
+    <div class="card-body">
+        <form asp-action="CreateManager" method="post" class="row g-2">
+            @Html.AntiForgeryToken()
+            <div class="col-md-3">
+                <input name="FullName" placeholder="Full Name" class="form-control" required />
+            </div>
+            <div class="col-md-3">
+                <input name="Email" type="email" placeholder="Email" class="form-control" required />
+            </div>
+            <div class="col-md-3">
+                <input name="Password" type="password" placeholder="Password" class="form-control" required />
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">Create Manager</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><strong>All Managers</strong></div>
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <p class="p-3 text-muted mb-0">No managers yet.</p>
+        }
+        else
+        {
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var m in Model)
+                {
+                    <tr>
+                        <td>@m.FullName</td>
+                        <td>@m.Email</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary"
+                               asp-action="EditManager" asp-route-id="@m.Id">Edit</a>
+
+                            <form asp-action="DeleteManager" method="post" class="d-inline"
+                                  onsubmit="return confirm('Delete this manager?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@m.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

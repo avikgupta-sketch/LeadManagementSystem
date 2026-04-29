@@ -1,9 +1,8 @@
-﻿using LMS.Data.Context;
+using LMS.Data.Context;
 using LMS.Models.DTOs.Dashboard;
 using LMS.Models.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-
 
 namespace LMS.Handlers.Dashboard.Handlers;
 
@@ -21,12 +20,18 @@ public class GetManagerDashboardHandler
         GetManagerDashboardQuery request,
         CancellationToken cancellationToken)
     {
+        // 🔴 Soft-delete filter is global on ApplicationUser & Lead, so already excluded.
+        var totalAgents = await _context.Users
+            .Where(u => u.ManagerId == request.ManagerId)
+            .CountAsync(cancellationToken);
+
         var leads = await _context.Leads
             .Where(l => l.ManagerId == request.ManagerId)
             .ToListAsync(cancellationToken);
 
         return new DashboardDto
         {
+            TotalAgents = totalAgents,
             TotalLeads = leads.Count,
 
             New = leads.Count(l => l.Status == LeadStatus.New),

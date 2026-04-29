@@ -1,5 +1,5 @@
-﻿using LMS.Handlers.Leads.Queries;
 using LMS.Handlers.Users.Commands;
+using LMS.Handlers.Users.Queries;
 using LMS.Models.DTOs.User;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace LMS.Web.Controllers;
 
-
+[Authorize]
 public class UserController : Controller
 {
     private readonly IMediator _mediator;
@@ -17,67 +17,132 @@ public class UserController : Controller
     {
         _mediator = mediator;
     }
+
+    private int CurrentUserId() =>
+        int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+    // ---------- ADMIN: MANAGERS ----------
+
     [Authorize(Roles = "Admin")]
-    public IActionResult Managers()
+    public async Task<IActionResult> Managers()
     {
-        
-        return View();
+        var managers = await _mediator.Send(new GetUsersByRoleQuery("Manager"));
+        return View(managers);
     }
-    [Authorize(Roles = "Admin")]
+
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateManager(CreateManagerDto dto)
     {
-        var result = await _mediator.Send(new CreateManagerCommand(dto));
-
-        if (!result)
+        if (!ModelState.IsValid ||
+            string.IsNullOrWhiteSpace(dto.FullName) ||
+            string.IsNullOrWhiteSpace(dto.Email) ||
+            string.IsNullOrWhiteSpace(dto.Password))
         {
-            TempData["Error"] = "Failed to create manager";
+            TempData["Error"] = "All fields are required";
+            return RedirectToAction("Managers");
         }
+
+        var result = await _mediator.Send(new CreateManagerCommand(dto));
+        if (!result)
+            TempData["Error"] = "Failed to create manager (email may already exist or password is too weak)";
 
         return RedirectToAction("Managers");
     }
-    [Authorize(Roles = "Manager")]
-    public IActionResult Agents()
+
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EditManager(int id)
     {
-        return View();
+        var user = await _mediator.Send(new GetUserByIdQuery(id));
+        if (user == null) return NotFound();
+        return View(user);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EditManager(EditUserDto dto)
+    {
+        if (!ModelState.IsValid)
+            return View(dto);
+
+        var ok = await _mediator.Send(new EditUserCommand(dto, CurrentUserId()));
+        if (!ok)
+        {
+            TempData["Error"] = "Failed to update manager";
+            return View(dto);
+        }
+        return RedirectToAction("Managers");
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteManager(int id)
+    {
+        await _mediator.Send(new SoftDeleteUserCommand(id, CurrentUserId()));
+        return RedirectToAction("Managers");
+    }
+
+    // ---------- MANAGER: AGENTS ----------
+
+    [Authorize(Roles = "Manager")]
+    public async Task<IActionResult> Agents()
+    {
+        int managerId = CurrentUserId();
+        var agents = await _mediator.Send(new GetUsersByRoleQuery("Agent", managerId));
+        return View(agents);
     }
 
     [HttpPost]
     [Authorize(Roles = "Manager")]
     public async Task<IActionResult> CreateAgent(CreateAgentDto dto)
     {
-        int managerId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
-
-        var result = await _mediator.Send(new CreateAgentCommand(dto, managerId));
-
-        if (!result)
+        if (!ModelState.IsValid ||
+            string.IsNullOrWhiteSpace(dto.FullName) ||
+            string.IsNullOrWhiteSpace(dto.Email) ||
+            string.IsNullOrWhiteSpace(dto.Password))
         {
-            TempData["Error"] = "Failed to create agent";
+            TempData["Error"] = "All fields are required";
+            return RedirectToAction("Agents");
         }
+
+        var result = await _mediator.Send(new CreateAgentCommand(dto, CurrentUserId()));
+        if (!result)
+            TempData["Error"] = "Failed to create agent (email may already exist or password is too weak)";
 
         return RedirectToAction("Agents");
     }
-    [HttpPost]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteManager(int id)
+
+    [HttpGet]
+    [Authorize(Roles = "Manager")]
+    public async Task<IActionResult> EditAgent(int id)
     {
-        int adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        await _mediator.Send(new SoftDeleteUserCommand(id, adminId));
-
-        return RedirectToAction("Managers");
+        var user = await _mediator.Send(new GetUserByIdQuery(id));
+        if (user == null) return NotFound();
+        return View(user);
     }
+
+    [HttpPost]
+    [Authorize(Roles = "Manager")]
+    public async Task<IActionResult> EditAgent(EditUserDto dto)
+    {
+        if (!ModelState.IsValid)
+            return View(dto);
+
+        var ok = await _mediator.Send(new EditUserCommand(dto, CurrentUserId()));
+        if (!ok)
+        {
+            TempData["Error"] = "Failed to update agent";
+            return View(dto);
+        }
+        return RedirectToAction("Agents");
+    }
+
     [HttpPost]
     [Authorize(Roles = "Manager")]
     public async Task<IActionResult> DeleteAgent(int id)
     {
-        int managerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        await _mediator.Send(new SoftDeleteUserCommand(id, managerId));
-
+        await _mediator.Send(new SoftDeleteUserCommand(id, CurrentUserId()));
         return RedirectToAction("Agents");
     }
-
-    
-
 }

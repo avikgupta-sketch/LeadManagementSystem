@@ -1,7 +1,8 @@
-﻿using LMS.Data.Context;
+using LMS.Data.Context;
+using LMS.Handlers.Leads.Queries;
 using LMS.Models.Entities;
 using MediatR;
-using LMS.Handlers.Leads.Queries;
+using Microsoft.EntityFrameworkCore;
 
 namespace LMS.Handlers.Leads.Handlers;
 
@@ -19,8 +20,12 @@ public class GetLeadsByAgentHandler
         GetLeadsByAgentQuery request,
         CancellationToken cancellationToken)
     {
-        return _context.Leads
+        // global query filter excludes IsDeleted leads
+        return await _context.Leads
+            .AsNoTracking()
+            .Include(l => l.AssignedAgent)
             .Where(l => l.AssignedAgentId == request.AgentId)
-            .ToList();
+            .OrderByDescending(l => l.CreatedDate)
+            .ToListAsync(cancellationToken);
     }
 }

@@ -1,27 +1,75 @@
-﻿@model LMS.Models.DTOs.User.CreateAgentDto
+@model List<LMS.Models.DTOs.User.EditUserDto>
 
-<h2>My Agents</h2>
+@{
+    ViewData["Title"] = "My Agents";
+}
 
-<form asp-action="CreateAgent" method="post">
-    <div>
-        <label>Full Name</label>
-        <input asp-for="FullName" />
-    </div>
-
-    <div>
-        <label>Email</label>
-        <input asp-for="Email" />
-    </div>
-
-    <div>
-        <label>Password</label>
-        <input asp-for="Password" type="password" />
-    </div>
-
-    <button type="submit">Create Agent</button>
-</form>
+<h2 class="mb-4">My Agents</h2>
 
 @if (TempData["Error"] != null)
 {
-    <p style="color:red">@TempData["Error"]</p>
+    <div class="alert alert-danger">@TempData["Error"]</div>
 }
+
+<div class="card mb-4">
+    <div class="card-header"><strong>Create new Agent</strong></div>
+    <div class="card-body">
+        <form asp-action="CreateAgent" method="post" class="row g-2">
+            @Html.AntiForgeryToken()
+            <div class="col-md-3">
+                <input name="FullName" placeholder="Full Name" class="form-control" required />
+            </div>
+            <div class="col-md-3">
+                <input name="Email" type="email" placeholder="Email" class="form-control" required />
+            </div>
+            <div class="col-md-3">
+                <input name="Password" type="password" placeholder="Password" class="form-control" required />
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">Create Agent</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><strong>My Team</strong></div>
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <p class="p-3 text-muted mb-0">No agents yet — create one above.</p>
+        }
+        else
+        {
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td>@a.FullName</td>
+                        <td>@a.Email</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary"
+                               asp-action="EditAgent" asp-route-id="@a.Id">Edit</a>
+
+                            <form asp-action="DeleteAgent" method="post" class="d-inline"
+                                  onsubmit="return confirm('Delete this agent?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

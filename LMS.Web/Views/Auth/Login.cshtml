@@ -1,34 +1,51 @@
-﻿@model LMS.Models.DTOs.Auth.LoginDto
+@model LMS.Models.DTOs.Auth.LoginDto
 
-<div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
+@{
+    Layout = null;
+}
 
-    <div class="card shadow p-4" style="width: 350px;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - LMS</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body class="bg-light">
 
-        <h3 class="text-center mb-4">Login</h3>
+<div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+
+    <div class="card shadow p-4" style="width: 360px;">
+
+        <h3 class="text-center mb-4">LMS Login</h3>
 
         <form asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
 
             <div class="mb-3">
                 <label class="form-label">Email</label>
-                <input asp-for="Email" class="form-control" />
+                <input asp-for="Email" class="form-control" autocomplete="username" />
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Password</label>
-                <input asp-for="Password" type="password" class="form-control" />
+                <input asp-for="Password" type="password" class="form-control" autocomplete="current-password" />
             </div>
 
             <div class="form-check mb-3">
                 <input asp-for="RememberMe" class="form-check-input" />
-                <label class="form-check-label">Remember Me</label>
+                <label class="form-check-label">Remember me</label>
             </div>
 
             <button type="submit" class="btn btn-primary w-100">Login</button>
 
             <div asp-validation-summary="All" class="text-danger mt-3"></div>
-
         </form>
 
     </div>
 
 </div>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
-﻿using LMS.Data.Context;
-using MediatR;
+using LMS.Data.Context;
 using LMS.Handlers.Users.Queries;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace LMS.Handlers.Users.Handlers;
 
@@ -18,11 +19,15 @@ public class GetAgentsByManagerHandler
         GetAgentsByManagerQuery request,
         CancellationToken cancellationToken)
     {
-        return _context.Users
-    .Where(u => u.ManagerId == request.ManagerId)
-    .Select(u => new { u.Id, u.FullName })
-    .ToList()
-    .Select(u => (u.Id, u.FullName))
-    .ToList();
+        // global query filter excludes IsDeleted
+        var rows = await _context.Users
+            .Where(u => u.ManagerId == request.ManagerId)
+            .OrderBy(u => u.FullName)
+            .Select(u => new { u.Id, u.FullName })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(u => (u.Id, u.FullName ?? string.Empty))
+            .ToList();
     }
 }

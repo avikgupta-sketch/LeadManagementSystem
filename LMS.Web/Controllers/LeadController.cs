@@ -1,4 +1,4 @@
-﻿using LMS.Handlers.Leads.Commands;
+using LMS.Handlers.Leads.Commands;
 using LMS.Handlers.Leads.Queries;
 using LMS.Handlers.Users.Queries;
 using LMS.Models.DTOs.Lead;
@@ -16,120 +16,183 @@ public class LeadController : Controller
 {
     private readonly IMediator _mediator;
     private readonly UserManager<ApplicationUser> _userManager;
-    public LeadController(
-        IMediator mediator,
-        UserManager<ApplicationUser> userManager)
+
+    public LeadController(IMediator mediator, UserManager<ApplicationUser> userManager)
     {
         _mediator = mediator;
         _userManager = userManager;
     }
 
+    private int CurrentUserId() =>
+        int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+    // ---------- CREATE ----------
+
+    [HttpGet]
     [Authorize(Roles = "Manager,Agent")]
     public async Task<IActionResult> Create()
     {
-        int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        
         if (User.IsInRole("Manager"))
         {
-            var agents = await _mediator.Send(new GetAgentsByManagerQuery(userId));
+            var agents = await _mediator.Send(new GetAgentsByManagerQuery(CurrentUserId()));
             ViewBag.Agents = agents;
         }
-        return View();
+        else
+        {
+            // Agent doesn't pick an agent — provide an empty list so the view never crashes.
+            ViewBag.Agents = new List<(int, string)>();
+        }
+
+        return View(new CreateLeadDto());
     }
 
-    [HttpPost]
-    [Authorize(Roles = "Manager,Agent")]
     [HttpPost]
     [Authorize(Roles = "Manager,Agent")]
     public async Task<IActionResult> Create(CreateLeadDto dto)
     {
-        int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
+        int userId = CurrentUserId();
         int managerId = userId;
 
-        // 🔥 If Agent → override values
+        // 🔥 Agent → auto-assign to self, find their manager
         if (User.IsInRole("Agent"))
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
-
             if (user == null || user.ManagerId == null)
                 return Unauthorized();
 
             managerId = user.ManagerId.Value;
-
-            // Agent always assigns to self
             dto.AssignedAgentId = userId;
         }
 
-        var result = await _mediator.Send(
-            new CreateLeadCommand(dto, userId, managerId));
-
-        if (!result)
+        if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Description))
         {
-            TempData["Error"] = "Invalid agent selection";
+            TempData["Error"] = "Title and Description are required";
+            return RedirectToAction("Create");
         }
 
-        return RedirectToAction(User.IsInRole("Agent") ? "MyLeads" : "Create");
+        var ok = await _mediator.Send(new CreateLeadCommand(dto, userId, managerId));
+
+        if (!ok)
+            TempData["Error"] = "Could not create lead. Check that the selected agent belongs to you.";
+
+        return RedirectToAction(User.IsInRole("Agent") ? "MyLeads" : "Index");
     }
+
+    // ---------- AGENT VIEW ----------
+
     [Authorize(Roles = "Agent")]
     public async Task<IActionResult> MyLeads()
     {
-        int agentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+        var leads = await _mediator.Send(new GetLeadsByAgentQuery(CurrentUserId()));
+        return View(leads);
+    }
 
-        var leads = await _mediator.Send(new GetLeadsByAgentQuery(agentId));
+    // ---------- MANAGER VIEW ----------
+
+    [Authorize(Roles = "Manager")]
+    public async Task<IActionResult> Index()
+    {
+        int managerId = CurrentUserId();
+        var leads = await _mediator.Send(new GetLeadsByManagerQuery(managerId));
+
+        // Provide agent dropdown for the inline reassign form
+        var agents = await _mediator.Send(new GetAgentsByManagerQuery(managerId));
+        ViewBag.Agents = agents;
 
         return View(leads);
     }
-    [HttpPost]
-    [Authorize(Roles = "Agent")]
-    public async Task<IActionResult> UpdateStatus(UpdateLeadStatusDto dto)
-    {
-        int agentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
-        var result = await _mediator.Send(
-            new UpdateLeadStatusCommand(dto, agentId));
+    // ---------- DETAIL (all roles) ----------
 
-        return RedirectToAction("MyLeads");
-    }
-    [HttpPost]
-    [Authorize(Roles = "Manager")]
-    public async Task<IActionResult> Reassign(ReassignLeadDto dto)
-    {
-        int managerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        var result = await _mediator.Send(
-            new ReassignLeadCommand(dto, managerId));
-
-        return RedirectToAction("Index"); // later we’ll improve
-    }
-    [HttpPost]
-    [Authorize(Roles = "Manager")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        int managerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        await _mediator.Send(new SoftDeleteLeadCommand(id, managerId));
-
-        return RedirectToAction("Index");
-    }
     [Authorize]
     public async Task<IActionResult> Detail(int id)
     {
         var lead = await _mediator.Send(new GetLeadByIdQuery(id));
+        if (lead == null)
+            return NotFound();
+        return View(lead);
+    }
 
+    // ---------- EDIT (Manager OR Agent) ----------
+
+    [HttpGet]
+    [Authorize(Roles = "Manager,Agent")]
+    public async Task<IActionResult> Edit(int id)
+    {
+        var lead = await _mediator.Send(new GetLeadByIdQuery(id));
         if (lead == null)
             return NotFound();
 
-        return View(lead);
+        var dto = new EditLeadDto
+        {
+            Id = lead.Id,
+            Title = lead.Title,
+            Description = lead.Description
+        };
+
+        ViewBag.Status = lead.Status;
+        return View(dto);
     }
-    [Authorize(Roles = "Manager")]
-    public async Task<IActionResult> Index()
+
+    [HttpPost]
+    [Authorize(Roles = "Manager,Agent")]
+    public async Task<IActionResult> Edit(EditLeadDto dto)
     {
-        int managerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+        if (!ModelState.IsValid)
+            return View(dto);
 
-        var leads = await _mediator.Send(new GetLeadsByManagerQuery(managerId));
+        bool isManager = User.IsInRole("Manager");
+        var ok = await _mediator.Send(new EditLeadCommand(dto, CurrentUserId(), isManager));
 
-        return View(leads);
+        if (!ok)
+        {
+            TempData["Error"] = "Could not update lead. " +
+                                "It may be in a terminal status (Converted/Closed/Rejected) " +
+                                "or you may not have permission.";
+            return View(dto);
+        }
+
+        return RedirectToAction(isManager ? "Index" : "MyLeads");
+    }
+
+    // ---------- STATUS UPDATE (Agent only) ----------
+
+    [HttpPost]
+    [Authorize(Roles = "Agent")]
+    public async Task<IActionResult> UpdateStatus(UpdateLeadStatusDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Remark))
+            TempData["Error"] = "Remark is required to change status";
+        else
+        {
+            var ok = await _mediator.Send(new UpdateLeadStatusCommand(dto, CurrentUserId()));
+            if (!ok)
+                TempData["Error"] = "Status update failed (lead may already be Converted/Closed/Rejected).";
+        }
+
+        return RedirectToAction("MyLeads");
+    }
+
+    // ---------- REASSIGN (Manager only) ----------
+
+    [HttpPost]
+    [Authorize(Roles = "Manager")]
+    public async Task<IActionResult> Reassign(ReassignLeadDto dto)
+    {
+        var ok = await _mediator.Send(new ReassignLeadCommand(dto, CurrentUserId()));
+        if (!ok)
+            TempData["Error"] = "Could not reassign. Lead may be terminal-status, or agent may not be in your team.";
+
+        return RedirectToAction("Index");
+    }
+
+    // ---------- DELETE (Manager only) ----------
+
+    [HttpPost]
+    [Authorize(Roles = "Manager")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await _mediator.Send(new SoftDeleteLeadCommand(id, CurrentUserId()));
+        return RedirectToAction("Index");
     }
 }

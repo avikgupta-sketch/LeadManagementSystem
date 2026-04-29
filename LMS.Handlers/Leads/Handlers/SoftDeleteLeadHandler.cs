@@ -1,6 +1,8 @@
-﻿using LMS.Data.Context;
-using MediatR;
+using LMS.Data.Context;
 using LMS.Handlers.Leads.Commands;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace LMS.Handlers.Leads.Handlers;
 
@@ -15,21 +17,29 @@ public class SoftDeleteLeadHandler : IRequestHandler<SoftDeleteLeadCommand, bool
 
     public async Task<bool> Handle(SoftDeleteLeadCommand request, CancellationToken cancellationToken)
     {
-        var lead = _context.Leads
-            .FirstOrDefault(l => l.Id == request.LeadId);
+        try
+        {
+            var lead = await _context.Leads
+                .FirstOrDefaultAsync(l => l.Id == request.LeadId, cancellationToken);
 
-        if (lead == null)
+            if (lead == null)
+                return false;
+
+            // 🔴 AUTHORIZATION: only the owning manager can soft-delete
+            if (lead.ManagerId != request.ManagerId)
+                return false;
+
+            lead.IsDeleted = true;
+            lead.UpdatedById = request.ManagerId;
+            lead.UpdatedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "SoftDeleteLeadHandler failed for LeadId={LeadId}", request.LeadId);
             return false;
-
-        // 🔴 Ensure manager owns the lead
-        if (lead.ManagerId != request.ManagerId)
-            return false;
-
-        lead.IsDeleted = true;
-        lead.UpdatedDate = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return true;
+        }
     }
 }
