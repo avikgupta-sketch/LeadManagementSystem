@@ -1,0 +1,29 @@
+﻿@model LMS.Models.DTOs.Lead.LeadDetailDto
+
+<h2>Lead Detail</h2>
+
+<p><strong>Title:</strong> @Model.Title</p>
+<p><strong>Status:</strong> @Model.Status</p>
+
+<h3>Remarks History</h3>
+
+<table border="1">
+    <tr>
+        <th>Remark</th>
+        <th>Old Status</th>
+        <th>New Status</th>
+        <th>Changed By</th>
+        <th>Date</th>
+    </tr>
+
+    @foreach (var r in Model.Remarks)
+    {
+        <tr>
+            <td>@r.Remark</td>
+            <td>@r.OldStatus</td>
+            <td>@r.NewStatus</td>
+            <td>@r.ChangedByName</td>
+            <td>@r.CreatedDate</td>
+        </tr>
+    }
+</table>

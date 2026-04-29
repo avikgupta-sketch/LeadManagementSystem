@@ -1,0 +1,16 @@
+﻿@model List<LMS.Models.Entities.Lead>
+
+<h2>Leads</h2>
+
+@foreach (var lead in Model)
+{
+    <div>
+        <p>@lead.Title - Assigned: @lead.AssignedAgentId</p>
+
+        <form asp-action="Reassign" method="post">
+            <input type="hidden" name="LeadId" value="@lead.Id" />
+            <input type="number" name="NewAgentId" placeholder="Enter AgentId" />
+            <button type="submit">Reassign</button>
+        </form>
+    </div>
+}

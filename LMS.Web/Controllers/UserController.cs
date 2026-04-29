@@ -1,8 +1,10 @@
-﻿using LMS.Models.DTOs.User;
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
+﻿using LMS.Handlers.Leads.Queries;
 using LMS.Handlers.Users.Commands;
+using LMS.Models.DTOs.User;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LMS.Web.Controllers;
 
@@ -55,4 +57,27 @@ public class UserController : Controller
 
         return RedirectToAction("Agents");
     }
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteManager(int id)
+    {
+        int adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+        await _mediator.Send(new SoftDeleteUserCommand(id, adminId));
+
+        return RedirectToAction("Managers");
+    }
+    [HttpPost]
+    [Authorize(Roles = "Manager")]
+    public async Task<IActionResult> DeleteAgent(int id)
+    {
+        int managerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+        await _mediator.Send(new SoftDeleteUserCommand(id, managerId));
+
+        return RedirectToAction("Agents");
+    }
+
+    
+
 }

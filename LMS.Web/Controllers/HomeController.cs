@@ -15,6 +15,17 @@ namespace LMS.Web.Controllers
 
         public IActionResult Index()
         {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                if (User.IsInRole("Admin"))
+                    return RedirectToAction("Managers", "User");
+
+                if (User.IsInRole("Manager"))
+                    return RedirectToAction("Agents", "User");
+
+                return RedirectToAction("MyLeads", "Lead");
+            }
+
             return View();
         }
 

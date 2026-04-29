@@ -83,7 +83,7 @@ using (var scope = app.Services.CreateScope())
 // 🔹 Routes
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 
 

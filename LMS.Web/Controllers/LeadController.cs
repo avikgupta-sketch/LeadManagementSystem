@@ -92,4 +92,44 @@ public class LeadController : Controller
 
         return RedirectToAction("MyLeads");
     }
+    [HttpPost]
+    [Authorize(Roles = "Manager")]
+    public async Task<IActionResult> Reassign(ReassignLeadDto dto)
+    {
+        int managerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+        var result = await _mediator.Send(
+            new ReassignLeadCommand(dto, managerId));
+
+        return RedirectToAction("Index"); // later we’ll improve
+    }
+    [HttpPost]
+    [Authorize(Roles = "Manager")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        int managerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+        await _mediator.Send(new SoftDeleteLeadCommand(id, managerId));
+
+        return RedirectToAction("Index");
+    }
+    [Authorize]
+    public async Task<IActionResult> Detail(int id)
+    {
+        var lead = await _mediator.Send(new GetLeadByIdQuery(id));
+
+        if (lead == null)
+            return NotFound();
+
+        return View(lead);
+    }
+    [Authorize(Roles = "Manager")]
+    public async Task<IActionResult> Index()
+    {
+        int managerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+        var leads = await _mediator.Send(new GetLeadsByManagerQuery(managerId));
+
+        return View(leads);
+    }
 }

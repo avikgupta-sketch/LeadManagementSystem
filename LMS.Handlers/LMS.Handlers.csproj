@@ -17,9 +17,4 @@
     <ProjectReference Include="..\LMS.Models\LMS.Models.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Dashboard\Handlers\" />
-    <Folder Include="Dashboard\Queries\" />
-  </ItemGroup>
-
 </Project>

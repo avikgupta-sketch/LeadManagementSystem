@@ -34,9 +34,4 @@
     <ProjectReference Include="..\LMS.Models\LMS.Models.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Areas\" />
-    <Folder Include="Data\" />
-  </ItemGroup>
-
 </Project>
