@@ -6,7 +6,7 @@ using LMS.Models.DTOs.Dashboard;
 
 namespace LMS.Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Manager,Agent")]
 public class DashboardController : Controller
 {
     private readonly IMediator _mediator;
@@ -37,7 +37,7 @@ public class DashboardController : Controller
             return View(data);
         }
 
-        // Admin (optional)
-        return View(new DashboardDto());
+        // Should not reach here — Admin is restricted by role attribute.
+        return RedirectToAction("Managers", "User");
     }
 }

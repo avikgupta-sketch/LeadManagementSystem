@@ -17,12 +17,33 @@ public class GetLeadsByManagerHandler : IRequestHandler<GetLeadsByManagerQuery, 
 
     public async Task<List<Lead>> Handle(GetLeadsByManagerQuery request, CancellationToken cancellationToken)
     {
-        // global query filter excludes IsDeleted leads
-        return await _context.Leads
+        // 1) Fetch leads (global filter excludes IsDeleted leads)
+        var leads = await _context.Leads
             .AsNoTracking()
-            .Include(l => l.AssignedAgent)
             .Where(l => l.ManagerId == request.ManagerId)
             .OrderByDescending(l => l.CreatedDate)
             .ToListAsync(cancellationToken);
+
+        if (leads.Count == 0) return leads;
+
+        // 2) Fetch agents — INCLUDING soft-deleted ones — so leads of
+        //    deleted agents do not silently disappear (the default
+        //    Include(l => l.AssignedAgent) is an INNER JOIN that gets
+        //    short-circuited by the User global query filter).
+        var agentIds = leads.Select(l => l.AssignedAgentId).Distinct().ToList();
+
+        var agents = await _context.Users
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .Where(u => agentIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+
+        foreach (var lead in leads)
+        {
+            if (agents.TryGetValue(lead.AssignedAgentId, out var agent))
+                lead.AssignedAgent = agent;
+        }
+
+        return leads;
     }
 }

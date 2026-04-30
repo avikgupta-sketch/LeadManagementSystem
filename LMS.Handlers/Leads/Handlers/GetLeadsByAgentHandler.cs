@@ -20,12 +20,28 @@ public class GetLeadsByAgentHandler
         GetLeadsByAgentQuery request,
         CancellationToken cancellationToken)
     {
-        // global query filter excludes IsDeleted leads
-        return await _context.Leads
+        // 1) Fetch leads (global filter excludes IsDeleted leads)
+        var leads = await _context.Leads
             .AsNoTracking()
-            .Include(l => l.AssignedAgent)
             .Where(l => l.AssignedAgentId == request.AgentId)
             .OrderByDescending(l => l.CreatedDate)
             .ToListAsync(cancellationToken);
+
+        if (leads.Count == 0) return leads;
+
+        // 2) Fetch the agent record (even if soft-deleted) so the view
+        //    never breaks on a null navigation property.
+        var agent = await _context.Users
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Id == request.AgentId, cancellationToken);
+
+        if (agent != null)
+        {
+            foreach (var lead in leads)
+                lead.AssignedAgent = agent;
+        }
+
+        return leads;
     }
 }

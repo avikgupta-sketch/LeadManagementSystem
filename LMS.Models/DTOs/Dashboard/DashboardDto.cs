@@ -14,4 +14,10 @@ public class DashboardDto
     public int Converted { get; set; }
     public int Closed { get; set; }
     public int Rejected { get; set; }
+
+    // Aggregate "lost / not converted" — Rejected + Closed + NotInterested.
+    public int Lost => Rejected + Closed + NotInterested;
+
+    // Aggregate "open / in-pipeline" — anything not yet finalized.
+    public int Open => New + InProgress + FollowUp + Interested;
 }

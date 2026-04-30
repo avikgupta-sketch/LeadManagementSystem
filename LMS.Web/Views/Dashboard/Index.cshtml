@@ -49,9 +49,20 @@
         <div class="lms-stat-card d-flex justify-content-between align-items-center">
             <div>
                 <div class="lms-stat-label">Open</div>
-                <div class="lms-stat-value">@(Model.New + Model.InProgress + Model.FollowUp + Model.Interested)</div>
+                <div class="lms-stat-value">@Model.Open</div>
             </div>
             <div class="lms-stat-accent" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);">⏳</div>
+        </div>
+    </div>
+
+    <div class="col-md-4 col-lg-3">
+        <div class="lms-stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="lms-stat-label">Lost / Rejected</div>
+                <div class="lms-stat-value">@Model.Lost</div>
+                <div class="lms-stat-label" style="font-size:.7rem;opacity:.7;">Rejected + Closed + Not Interested</div>
+            </div>
+            <div class="lms-stat-accent" style="background:linear-gradient(135deg,#ef4444,#f97316);">✗</div>
         </div>
     </div>
 </div>

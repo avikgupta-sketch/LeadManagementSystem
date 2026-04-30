@@ -79,7 +79,9 @@ public class UserController : Controller
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteManager(int id)
     {
-        await _mediator.Send(new SoftDeleteUserCommand(id, CurrentUserId()));
+        var result = await _mediator.Send(new SoftDeleteUserCommand(id, CurrentUserId()));
+        if (!result.Success)
+            TempData["Error"] = result.Error;
         return RedirectToAction("Managers");
     }
 
@@ -142,7 +144,9 @@ public class UserController : Controller
     [Authorize(Roles = "Manager")]
     public async Task<IActionResult> DeleteAgent(int id)
     {
-        await _mediator.Send(new SoftDeleteUserCommand(id, CurrentUserId()));
+        var result = await _mediator.Send(new SoftDeleteUserCommand(id, CurrentUserId()));
+        if (!result.Success)
+            TempData["Error"] = result.Error;
         return RedirectToAction("Agents");
     }
 }

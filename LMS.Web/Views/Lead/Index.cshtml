@@ -48,7 +48,13 @@
                     <tr>
                         <td><strong>@lead.Title</strong></td>
                         <td><span class="lms-badge lms-badge-@lead.Status">@lead.Status</span></td>
-                        <td class="text-muted">@(lead.AssignedAgent?.FullName ?? $"Agent #{lead.AssignedAgentId}")</td>
+                        <td class="text-muted">
+                            @(lead.AssignedAgent?.FullName ?? $"Agent #{lead.AssignedAgentId}")
+                            @if (lead.AssignedAgent?.IsDeleted == true)
+                            {
+                                <span class="badge bg-secondary ms-1" title="Agent has been removed">deleted</span>
+                            }
+                        </td>
 
                         <td>
                             @if (!isTerminal)

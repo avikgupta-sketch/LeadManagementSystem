@@ -35,7 +35,8 @@
         </div>
 
         <nav class="lms-nav">
-            @if (User.Identity?.IsAuthenticated == true)
+            @* Dashboard is shown to Manager and Agent only (Admin only manages Managers). *@
+            @if (User.IsInRole("Manager") || User.IsInRole("Agent"))
             {
                 <a class="lms-nav-link" asp-controller="Dashboard" asp-action="Index">
                     <span class="ico">📊</span> Dashboard
