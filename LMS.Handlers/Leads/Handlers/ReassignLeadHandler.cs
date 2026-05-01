@@ -51,8 +51,14 @@ public class ReassignLeadHandler : IRequestHandler<ReassignLeadCommand, bool>
                 return false;
 
             var oldAgentId = lead.AssignedAgentId;
+            
             if (oldAgentId == dto.NewAgentId)
                 return false;
+            var oldAgent = await _context.Users
+    .FirstOrDefaultAsync(u => u.Id == oldAgentId, cancellationToken);
+
+            string oldAgentName = oldAgent?.FullName ?? $"Agent {oldAgentId}";  // fallback to ID if not found
+            string newAgentName = agent.FullName;  // agent is already fetched above
 
             lead.AssignedAgentId = dto.NewAgentId;
             lead.UpdatedById = request.ManagerId;
@@ -63,7 +69,7 @@ public class ReassignLeadHandler : IRequestHandler<ReassignLeadCommand, bool>
             {
                 LeadId = lead.Id,
                 ChangedById = request.ManagerId,
-                Remark = $"Lead reassigned from Agent {oldAgentId} to Agent {dto.NewAgentId}",
+                Remark = $"Lead reassigned from {oldAgentName} to {newAgentName}",
                 OldStatus = lead.Status,
                 NewStatus = lead.Status,
                 CreatedById = request.ManagerId

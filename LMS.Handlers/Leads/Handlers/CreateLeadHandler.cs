@@ -23,11 +23,17 @@ public class CreateLeadHandler : IRequestHandler<CreateLeadCommand, bool>
         {
             var dto = request.Dto;
 
-            // 🔴 DATA VALIDATION: title / description must not be null/empty
-            if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Description))
+            // 🔴 DATA VALIDATION
+            if (string.IsNullOrWhiteSpace(dto.Name) ||
+                string.IsNullOrWhiteSpace(dto.Description) ||
+                string.IsNullOrWhiteSpace(dto.PhoneNumber) ||
+                string.IsNullOrWhiteSpace(dto.Email) ||
+                string.IsNullOrWhiteSpace(dto.Address))
+            {
                 return false;
+            }
 
-            // 🔴 DATA VALIDATION: invalid AgentId → reject
+            // 🔴 VALIDATION: agent must exist
             var agent = await _context.Users
                 .FirstOrDefaultAsync(u => u.Id == dto.AssignedAgentId, cancellationToken);
 
@@ -35,15 +41,17 @@ public class CreateLeadHandler : IRequestHandler<CreateLeadCommand, bool>
                 return false;
 
             // 🔴 AUTHORIZATION: agent must belong to the manager that owns this lead
-            //    (also blocks Manager from assigning leads to themselves
-            //     because a Manager's ManagerId is null, not their own Id).
             if (agent.ManagerId != request.ManagerId)
                 return false;
 
             var lead = new Lead
             {
-                Title = dto.Title.Trim(),
+                Name = dto.Name.Trim(),
                 Description = dto.Description.Trim(),
+                PhoneNumber = dto.PhoneNumber.Trim(),
+                Email = dto.Email.Trim(),
+                Address = dto.Address.Trim(),
+                Gender = dto.Gender,
                 AssignedAgentId = dto.AssignedAgentId,
                 ManagerId = request.ManagerId,
                 CreatedById = request.CreatedById,

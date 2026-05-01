@@ -24,16 +24,30 @@ public class GetLeadByIdHandler : IRequestHandler<GetLeadByIdQuery, LeadDetailDt
                 .ThenInclude(r => r.ChangedBy)
             .FirstOrDefaultAsync(l => l.Id == request.LeadId, cancellationToken);
 
-        // 🔴 NULL SAFETY
         if (lead == null)
             return null;
+
+        // Pull the agent ourselves (ignoring the user query filter) so soft-deleted
+        // agents still resolve to a name instead of "Unknown".
+        var agent = await _context.Users
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Id == lead.AssignedAgentId, cancellationToken);
 
         return new LeadDetailDto
         {
             Id = lead.Id,
-            Title = lead.Title,
+            Name = lead.Name,
             Description = lead.Description,
-            Status = lead.Status.ToString(),
+            PhoneNumber = lead.PhoneNumber,
+            Email = lead.Email,
+            Address = lead.Address,
+            Gender = lead.Gender,
+            Status = lead.Status,
+
+            AssignedAgentId = lead.AssignedAgentId,
+            AssignedAgentName = agent?.FullName ?? $"Agent #{lead.AssignedAgentId}",
+            AssignedAgentDeleted = agent?.IsDeleted ?? true,
 
             Remarks = lead.Remarks
                 .OrderByDescending(r => r.CreatedDate)
@@ -44,7 +58,6 @@ public class GetLeadByIdHandler : IRequestHandler<GetLeadByIdQuery, LeadDetailDt
                     OldStatus = r.OldStatus.ToString(),
                     NewStatus = r.NewStatus.ToString(),
                     CreatedDate = r.CreatedDate,
-                    // 🔴 NULL SAFETY: ChangedBy may have been hidden by query filter
                     ChangedByName = r.ChangedBy?.FullName ?? "Unknown"
                 }).ToList()
         };

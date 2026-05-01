@@ -1,4 +1,5 @@
 @model LMS.Models.DTOs.Lead.CreateLeadDto
+@using LMS.Models.Enums
 
 @{
     ViewData["Title"] = "Create Lead";
@@ -9,7 +10,7 @@
 <div class="lms-topbar">
     <div>
         <h1 class="lms-page-title">Create Lead</h1>
-        <div class="lms-page-sub">Add a new lead to the pipeline</div>
+        <div class="lms-page-sub">Add a new customer lead to the pipeline</div>
     </div>
 </div>
 
@@ -26,41 +27,80 @@
     </div>
 }
 
-<div class="card" style="max-width:640px">
+<div class="card" style="max-width:760px">
     <div class="card-body">
         <form asp-action="Create" method="post">
             @Html.AntiForgeryToken()
 
-            <div class="mb-3">
-                <label class="form-label">Title</label>
-                <input asp-for="Title" class="form-control" required placeholder="e.g. Demo with Acme Corp" />
-                <span asp-validation-for="Title" class="text-danger small"></span>
-            </div>
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
 
-            <div class="mb-3">
-                <label class="form-label">Description</label>
-                <textarea asp-for="Description" class="form-control" rows="4" required
-                          placeholder="Brief details about this lead"></textarea>
-                <span asp-validation-for="Description" class="text-danger small"></span>
-            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Name</label>
+                    <input asp-for="Name" class="form-control" required placeholder="Customer full name" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
 
-            @if (isManager)
-            {
-                <div class="mb-3">
-                    <label class="form-label">Assign to Agent</label>
-                    <select asp-for="AssignedAgentId" class="form-select" required>
-                        <option value="">-- Select Agent --</option>
-                        @foreach (var agent in agents)
+                <div class="col-md-6">
+                    <label class="form-label">Phone Number</label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+               
+
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input asp-for="Email" type="email" class="form-control" required placeholder="customer@example.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Gender</label>
+                    <select asp-for="Gender" class="form-select" required>
+                        @foreach (var g in Enum.GetValues(typeof(Gender)))
                         {
-                            <option value="@agent.Id">@agent.Name</option>
+                            <option value="@g">@g</option>
                         }
                     </select>
-                    <span asp-validation-for="AssignedAgentId" class="text-danger small"></span>
+                    <span asp-validation-for="Gender" class="text-danger small"></span>
                 </div>
-            }
 
-            <button type="submit" class="btn btn-primary"
-                    @(isManager && !agents.Any() ? "disabled" : "")>Create Lead</button>
+                <div class="col-12">
+                    <label class="form-label">Address</label>
+                    <input asp-for="Address" class="form-control" required placeholder="Street, City, State" />
+                    <span asp-validation-for="Address" class="text-danger small"></span>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Description</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" required
+                              placeholder="What is this lead about?"></textarea>
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+
+                @if (isManager)
+                {
+                    <div class="col-12">
+                        <label class="form-label">Assign to Agent</label>
+                        <select asp-for="AssignedAgentId" class="form-select" required>
+                            <option value="">-- Select Agent --</option>
+                            @foreach (var agent in agents)
+                            {
+                                <option value="@agent.Id">@agent.Name</option>
+                            }
+                        </select>
+                        <span asp-validation-for="AssignedAgentId" class="text-danger small"></span>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary"
+                        @(isManager && !agents.Any() ? "disabled" : "")>
+                    Create Lead
+                </button>
+                <a asp-action="@(isManager ? "Index" : "MyLeads")" class="btn btn-outline-primary">Cancel</a>
+            </div>
         </form>
     </div>
 </div>

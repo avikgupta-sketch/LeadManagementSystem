@@ -11,11 +11,17 @@ namespace LMS.Models.Entities;
 
 public class Lead : BaseEntity
 {
-    public string Title { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;
 
     public LeadStatus Status { get; set; } = LeadStatus.New;
+
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Address { get; set; } = string.Empty;
+    public Gender Gender { get; set; } = Gender.Other;
+    
 
     public int AssignedAgentId { get; set; }
 

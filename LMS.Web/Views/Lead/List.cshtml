@@ -1,0 +1,93 @@
+﻿@model List<LMS.Models.Entities.Lead>
+@using LMS.Models.Enums
+
+@{
+    ViewData["Title"] = User.IsInRole("Manager") ? "All Leads" : "My Leads";
+    bool isManager = User.IsInRole("Manager");
+}
+
+<div class="lms-topbar">
+    <div>
+        <h1 class="lms-page-title">@ViewData["Title"]</h1>
+        <div class="lms-page-sub">
+            @(isManager
+                        ? "All leads across your team — click View / Edit to manage."
+                        : "Your assigned leads — click View / Edit to update or change status.")
+        </div>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ New Lead</a>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<div class="card">
+    <div class="card-header">@Model.Count lead@(Model.Count == 1 ? "" : "s")</div>
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <p class="p-4 text-muted mb-0 text-center">No leads yet.</p>
+        }
+        else
+        {
+            <table class="table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Phone Number</th>
+                        <th>Email</th>
+                        @if (isManager)
+                        {
+                            <th>Assigned Agent</th>
+                        }
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var lead in Model)
+                    {
+                        <tr>
+                            <td><strong>@lead.Name</strong></td>
+                            <td><span class="lms-badge lms-badge-@lead.Status">@lead.Status</span></td>
+                            <td class="text-muted">@lead.PhoneNumber</td>
+                            <td class="text-muted">@lead.Email</td>
+
+                            @if (isManager)
+                            {
+                                <td class="text-muted">
+                                    @(lead.AssignedAgent?.FullName ?? $"Agent #{lead.AssignedAgentId}")
+                                    @if (lead.AssignedAgent?.IsDeleted == true)
+                                    {
+                                        <span class="badge bg-secondary ms-1" title="Agent has been removed">deleted</span>
+                                    }
+                                </td>
+                            }
+
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   asp-action="Detail" asp-route-id="@lead.Id">View / Edit</a>
+
+                                @if (isManager)
+                                {
+                                    <form asp-action="Delete" method="post" class="d-inline"
+                                          onsubmit="return confirm('Delete this lead?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@lead.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

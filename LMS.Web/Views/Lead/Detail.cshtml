@@ -1,42 +1,217 @@
 @model LMS.Models.DTOs.Lead.LeadDetailDto
+@using LMS.Models.Enums
 
 @{
-    ViewData["Title"] = "Lead Detail";
+    ViewData["Title"] = $"Lead — {Model.Name}";
+    bool isManager = User.IsInRole("Manager");
+    bool isAgent = User.IsInRole("Agent");
+    var agents = ViewBag.Agents as List<(int Id, string Name)> ?? new List<(int, string)>();
+    var availableAgents = agents.Where(a => a.Id != Model.AssignedAgentId).ToList();
 }
 
 <div class="lms-topbar">
     <div>
-        <h1 class="lms-page-title">@Model.Title</h1>
-        <div class="lms-page-sub">Lead detail and status history</div>
+        <h1 class="lms-page-title">@Model.Name</h1>
+        <div class="lms-page-sub">
+            <span class="lms-badge lms-badge-@Model.Status">@Model.Status</span>
+            <span class="text-muted ms-2">Assigned to <strong>@Model.AssignedAgentName</strong></span>
+            @if (Model.AssignedAgentDeleted)
+            {
+                <span class="badge bg-secondary ms-1">deleted</span>
+            }
+        </div>
     </div>
     <div>
-        @if (User.IsInRole("Manager"))
-        {
-            <a asp-action="Index" class="btn btn-outline-primary">← Back to Leads</a>
-        }
-        else if (User.IsInRole("Agent"))
-        {
-            <a asp-action="MyLeads" class="btn btn-outline-primary">← Back to My Leads</a>
-        }
+        <a asp-action="@(isManager ? "Index" : "MyLeads")" class="btn btn-outline-primary">← Back</a>
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-8">
-                <div class="lms-stat-label mb-1">Description</div>
-                <div>@Model.Description</div>
-            </div>
-            <div class="col-md-4">
-                <div class="lms-stat-label mb-1">Current status</div>
-                <span class="lms-badge lms-badge-@Model.Status">@Model.Status</span>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<div class="row g-3">
+
+    @* ─── LEFT: editable customer / lead fields ─────────────────── *@
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">Lead / Customer Details</div>
+            <div class="card-body">
+                @if (Model.IsTerminal)
+                {
+                    <div class="alert alert-secondary">
+                        This lead is <strong>@Model.Status</strong> and can no longer be edited.
+                    </div>
+                }
+
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Id" value="@Model.Id" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Name</label>
+                            <input name="Name" value="@Model.Name" class="form-control" required
+                                   @(Model.IsTerminal ? "disabled" : "") />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input name="PhoneNumber" value="@Model.PhoneNumber" class="form-control" required
+                                   @(Model.IsTerminal ? "disabled" : "") />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input name="Email" type="email" value="@Model.Email" class="form-control" required
+                                   @(Model.IsTerminal ? "disabled" : "") />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Gender</label>
+                            <select name="Gender" class="form-select" required
+                                    @(Model.IsTerminal ? "disabled" : "")>
+                                @foreach (var g in Enum.GetValues(typeof(Gender)))
+                                {
+                                    if ((Gender)g == Model.Gender)
+                                    {
+                                        <option value="@g" selected>@g</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@g">@g</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Address</label>
+                            <input name="Address" value="@Model.Address" class="form-control" required
+                                   @(Model.IsTerminal ? "disabled" : "") />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea name="Description" rows="4" class="form-control" required
+                                      @(Model.IsTerminal ? "disabled" : "")>@Model.Description</textarea>
+                        </div>
+                    </div>
+
+                    @if (!Model.IsTerminal)
+                    {
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    }
+                </form>
             </div>
         </div>
     </div>
+
+    @* ─── RIGHT: status update (Agent) OR reassign (Manager) ──── *@
+    <div class="col-lg-5">
+
+        @if (isAgent)
+        {
+            <div class="card h-100">
+                <div class="card-header">Update Status</div>
+                <div class="card-body">
+                    @if (Model.IsTerminal)
+                    {
+                        <p class="text-muted mb-0">
+                            Lead is <strong>@Model.Status</strong>. No further status changes are allowed.
+                        </p>
+                    }
+                    else
+                    {
+                        <form asp-action="UpdateStatus" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="LeadId" value="@Model.Id" />
+
+                            <div class="mb-3">
+                                <label class="form-label">New Status</label>
+                                <select name="NewStatus" class="form-select" required>
+                                    @foreach (var s in Enum.GetValues(typeof(LeadStatus)))
+                                    {
+                                        if ((LeadStatus)s == Model.Status)
+                                        {
+                                            <option value="@s" selected>@s</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@s">@s</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Remark <span class="text-danger">*</span></label>
+                                <textarea name="Remark" rows="3" class="form-control" required
+                                  placeholder="Why are you changing the status?"></textarea>
+                                <small class="text-muted">A remark is mandatory for every status change.</small>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Update Status</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+        else if (isManager)
+        {
+            <div class="card h-100">
+                <div class="card-header">Reassign Lead</div>
+                <div class="card-body">
+                    @if (Model.IsTerminal)
+                    {
+                        <p class="text-muted mb-0">
+                            Lead is <strong>@Model.Status</strong> and cannot be reassigned.
+                        </p>
+                    }
+                    else if (!availableAgents.Any())
+                    {
+                        <p class="text-muted mb-0">No other agents available to reassign to.</p>
+                    }
+                    else
+                    {
+                        <form asp-action="Reassign" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="LeadId" value="@Model.Id" />
+
+                            <div class="mb-3">
+                                <label class="form-label">Currently assigned to</label>
+                                <input class="form-control" value="@Model.AssignedAgentName" disabled />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Reassign to</label>
+                                <select name="NewAgentId" class="form-select" required>
+                                    <option value="">-- Choose agent --</option>
+                                    @foreach (var a in availableAgents)
+                                    {
+                                        <option value="@a.Id">@a.Name</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Reassign</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
-<div class="card">
+@* ─── BOTTOM: audit log table (unchanged behaviour) ───────────── *@
+<div class="card mt-3">
     <div class="card-header">Remarks History (@Model.Remarks.Count)</div>
     <div class="card-body p-0">
         @if (!Model.Remarks.Any())
@@ -55,19 +230,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                @foreach (var r in Model.Remarks)
-                {
-                    <tr>
-                        <td class="text-muted small">@r.CreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>
-                            <span class="lms-badge lms-badge-@r.OldStatus">@r.OldStatus</span>
-                            <span class="text-muted mx-1">→</span>
-                            <span class="lms-badge lms-badge-@r.NewStatus">@r.NewStatus</span>
-                        </td>
-                        <td>@r.ChangedByName</td>
-                        <td>@r.Remark</td>
-                    </tr>
-                }
+                    @foreach (var r in Model.Remarks)
+                    {
+                        <tr>
+                            <td class="text-muted small">@r.CreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <span class="lms-badge lms-badge-@r.OldStatus">@r.OldStatus</span>
+                                <span class="text-muted mx-1">→</span>
+                                <span class="lms-badge lms-badge-@r.NewStatus">@r.NewStatus</span>
+                            </td>
+                            <td>@r.ChangedByName</td>
+                            <td>@r.Remark</td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         }

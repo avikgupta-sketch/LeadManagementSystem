@@ -23,8 +23,14 @@ public class EditLeadHandler : IRequestHandler<EditLeadCommand, bool>
             var dto = request.Dto;
 
             // Null safety + validation
-            if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Description))
+            if (string.IsNullOrWhiteSpace(dto.Name) ||
+                string.IsNullOrWhiteSpace(dto.Description) ||
+                string.IsNullOrWhiteSpace(dto.PhoneNumber) ||
+                string.IsNullOrWhiteSpace(dto.Email) ||
+                string.IsNullOrWhiteSpace(dto.Address))
+            {
                 return false;
+            }
 
             var lead = await _context.Leads
                 .FirstOrDefaultAsync(l => l.Id == dto.Id, cancellationToken);
@@ -43,19 +49,21 @@ public class EditLeadHandler : IRequestHandler<EditLeadCommand, bool>
             // 🔴 Authorization
             if (request.IsManager)
             {
-                // Manager may edit only leads belonging to their agents
                 if (lead.ManagerId != request.RequestedById)
                     return false;
             }
             else
             {
-                // Agent may edit only their own leads
                 if (lead.AssignedAgentId != request.RequestedById)
                     return false;
             }
 
-            lead.Title = dto.Title.Trim();
+            lead.Name = dto.Name.Trim();
             lead.Description = dto.Description.Trim();
+            lead.PhoneNumber = dto.PhoneNumber.Trim();
+            lead.Email = dto.Email.Trim();
+            lead.Address = dto.Address.Trim();
+            lead.Gender = dto.Gender;
             lead.UpdatedById = request.RequestedById;
             lead.UpdatedDate = DateTime.UtcNow;
 
@@ -69,3 +77,4 @@ public class EditLeadHandler : IRequestHandler<EditLeadCommand, bool>
         }
     }
 }
+
