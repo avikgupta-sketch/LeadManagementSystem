@@ -1,11 +1,30 @@
-﻿@model List<LMS.Models.Entities.Lead>
-@using LMS.Models.Enums
-
-@{
+﻿@{
     ViewData["Title"] = User.IsInRole("Manager") ? "All Leads" : "My Leads";
     bool isManager = User.IsInRole("Manager");
+    string dataUrl = isManager ? "/Lead/LeadData" : "/Lead/LeadData";
 }
 
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+<style>
+    #leadsTable_length select {
+        min-width: 65px !important; /* Gives enough space for 3-digit numbers if needed */
+        padding-right: 28px !important; /* Ensures the arrow doesn't overlap the text */
+        padding-left: 10px !important;
+        appearance: none; /* Helps normalize look across browsers */
+        background-position: right 8px center; /* Positions the Bootstrap arrow correctly */
+    }
+
+    /* Optional: Add a little space between the "Show" text and the dropdown */
+    .dataTables_length label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+</style>
 <div class="lms-topbar">
     <div>
         <h1 class="lms-page-title">@ViewData["Title"]</h1>
@@ -28,66 +47,96 @@
 }
 
 <div class="card">
-    <div class="card-header">@Model.Count lead@(Model.Count == 1 ? "" : "s")</div>
     <div class="card-body p-0">
-        @if (!Model.Any())
-        {
-            <p class="p-4 text-muted mb-0 text-center">No leads yet.</p>
-        }
-        else
-        {
-            <table class="table mb-0 align-middle">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Phone Number</th>
-                        <th>Email</th>
-                        @if (isManager)
-                        {
-                            <th>Assigned Agent</th>
-                        }
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var lead in Model)
+        <table id="leadsTable" class="table mb-0 align-middle" style="width:100%">
+            <thead>
+                <tr>
+                    <th name="Name">Name</th>
+                    <th name="Status">Status</th>
+                    <th name="PhoneNumber">Phone Number</th>
+                    <th name="Email">Email</th>
+                    @if (isManager)
                     {
-                        <tr>
-                            <td><strong>@lead.Name</strong></td>
-                            <td><span class="lms-badge lms-badge-@lead.Status">@lead.Status</span></td>
-                            <td class="text-muted">@lead.PhoneNumber</td>
-                            <td class="text-muted">@lead.Email</td>
-
-                            @if (isManager)
-                            {
-                                <td class="text-muted">
-                                    @(lead.AssignedAgent?.FullName ?? $"Agent #{lead.AssignedAgentId}")
-                                    @if (lead.AssignedAgent?.IsDeleted == true)
-                                    {
-                                        <span class="badge bg-secondary ms-1" title="Agent has been removed">deleted</span>
-                                    }
-                                </td>
-                            }
-
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-outline-primary"
-                                   asp-action="Detail" asp-route-id="@lead.Id">View / Edit</a>
-
-                                @if (isManager)
-                                {
-                                    <form asp-action="Delete" method="post" class="d-inline"
-                                          onsubmit="return confirm('Delete this lead?');">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@lead.Id" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                    </form>
-                                }
-                            </td>
-                        </tr>
+                        <th name="AssignedAgent">Assigned Agent</th>
                     }
-                </tbody>
-            </table>
-        }
+                    <th name="">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
 </div>
+
+@section Scripts {
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        var isManager = @Json.Serialize(isManager);
+
+        $(document).ready(function () {
+            var columns = [
+                { data: 'name',        name: 'Name' },
+                { data: 'status',      name: 'Status',
+                  render: function(data) {
+                      return '<span class="lms-badge lms-badge-' + data + '">' + data + '</span>';
+                  }
+                },
+                { data: 'phoneNumber', name: 'PhoneNumber', orderable: false },
+                { data: 'email',       name: 'Email' }
+            ];
+
+            if (isManager) {
+                columns.push({ data: 'assignedAgent', name: 'AssignedAgent', orderable: false });
+            }
+
+            columns.push({
+                data: 'id',
+                name: '',
+                orderable: false,
+                className: 'text-end',
+                render: function (id) {
+                    var html = '<a class="btn btn-sm btn-outline-primary" href="/Lead/Detail/' + id + '">View / Edit</a>';
+                    if (isManager) {
+                        html += ' <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteLead(' + id + ')">Delete</button>';
+                    }
+                    return html;
+                }
+            });
+
+            $('#leadsTable').DataTable({
+                processing:  true,
+                serverSide:  true,
+                ajax: {
+                    url:  '/Lead/LeadData',
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                },
+                columns: columns,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                language: {
+                    processing: 'Loading leads...',
+                    emptyTable: 'No leads found.',
+                    zeroRecords: 'No leads match your search.'
+                },
+                order: [[0, 'asc']]
+            });
+        });
+
+        // Delete handler
+        function deleteLead(id) {
+            if (!confirm('Delete this lead?')) return;
+            $.post('/Lead/Delete', {
+                id: id,
+                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+            }, function() {
+                $('#leadsTable').DataTable().ajax.reload();
+            });
+        }
+    </script>
+
+    <!-- Hidden antiforgery token for AJAX calls -->
+    @Html.AntiForgeryToken()
+}

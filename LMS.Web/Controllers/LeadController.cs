@@ -96,17 +96,17 @@ public class LeadController : Controller
     // ─────────────────────────────────────────────────────────
 
     [Authorize(Roles = "Agent")]
-    public async Task<IActionResult> MyLeads()
+    public  IActionResult MyLeads()
     {
-        var leads = await _mediator.Send(new GetLeadsByAgentQuery(CurrentUserId()));
-        return View("List", leads);
+        
+        return View("List");
     }
 
     [Authorize(Roles = "Manager")]
-    public async Task<IActionResult> Index()
+    public IActionResult Index()
     {
-        var leads = await _mediator.Send(new GetLeadsByManagerQuery(CurrentUserId()));
-        return View("List", leads);
+        
+        return View("List");
     }
 
     // ─────────────────────────────────────────────────────────
@@ -215,7 +215,41 @@ public class LeadController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        await _mediator.Send(new SoftDeleteLeadCommand(id, CurrentUserId()));
+        var ok=await _mediator.Send(new SoftDeleteLeadCommand(id, CurrentUserId()));
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            return Json(new { success = ok });
         return RedirectToAction("Index");
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // DATATABLE — Server-side JSON endpoint
+    // ─────────────────────────────────────────────────────────
+    [HttpPost]
+    [Authorize(Roles = "Manager,Agent")]
+    public async Task<IActionResult> LeadData()
+    {
+        // Parse what DataTables sends
+        var draw = int.Parse(Request.Form["draw"].FirstOrDefault() ?? "1");
+        var start = int.Parse(Request.Form["start"].FirstOrDefault() ?? "0");
+        var length = int.Parse(Request.Form["length"].FirstOrDefault() ?? "10");
+        var search = Request.Form["search[value]"].FirstOrDefault() ?? "";
+        var orderCol = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault() ?? "Name";
+        var orderDir = Request.Form["order[0][dir]"].FirstOrDefault() ?? "asc";
+
+        var dtRequest = new DataTableRequestDto
+        {
+            Draw = draw,
+            Start = start,
+            Length = length,
+            SearchValue = search,
+            OrderColumn = orderCol,
+            OrderDir = orderDir
+        };
+
+        bool isManager = User.IsInRole("Manager");
+        var result = await _mediator.Send(
+            new GetLeadsDataTableQuery(dtRequest, CurrentUserId(), isManager));
+
+        return Json(result);
     }
 }
