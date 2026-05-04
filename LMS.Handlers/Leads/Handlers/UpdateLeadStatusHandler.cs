@@ -24,7 +24,7 @@ public class UpdateLeadStatusHandler
         {
             var dto = request.Dto;
 
-            // 🔴 DATA VALIDATION: remark is mandatory
+            
             if (string.IsNullOrWhiteSpace(dto.Remark))
                 return false;
 
@@ -33,11 +33,11 @@ public class UpdateLeadStatusHandler
                     l => l.Id == dto.LeadId && l.AssignedAgentId == request.AgentId,
                     cancellationToken);
 
-            // Null safety + AUTHORIZATION (only the assigned agent can update)
+            
             if (lead == null)
                 return false;
 
-            // 🔴 EDIT RESTRICTION: nobody can edit a lead in a terminal status
+            
             if (lead.Status == LeadStatus.Converted ||
                 lead.Status == LeadStatus.Closed ||
                 lead.Status == LeadStatus.Rejected)
@@ -47,7 +47,7 @@ public class UpdateLeadStatusHandler
 
             var oldStatus = lead.Status;
 
-            // No-op guard: don't write a remark if nothing actually changed
+            
             if (oldStatus == dto.NewStatus)
                 return false;
 
@@ -55,7 +55,7 @@ public class UpdateLeadStatusHandler
             lead.UpdatedById = request.AgentId;
             lead.UpdatedDate = DateTime.UtcNow;
 
-            // 🔥 Mandatory audit remark
+            //  Mandatory audit remark
             var remark = new LeadRemark
             {
                 LeadId = lead.Id,

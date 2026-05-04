@@ -20,8 +20,6 @@ public class GetUsersByRoleHandler : IRequestHandler<GetUsersByRoleQuery, List<E
     {
         var usersInRole = await _userManager.GetUsersInRoleAsync(request.Role);
 
-        // global query filter on ApplicationUser already excludes IsDeleted == true,
-        // but GetUsersInRoleAsync runs its own query so re-filter here for safety.
         IEnumerable<ApplicationUser> filtered = usersInRole.Where(u => !u.IsDeleted);
 
         if (request.Role == "Agent" && request.ManagerId.HasValue)

@@ -25,7 +25,7 @@ public class SoftDeleteLeadHandler : IRequestHandler<SoftDeleteLeadCommand, bool
             if (lead == null)
                 return false;
 
-            // 🔴 AUTHORIZATION: only the owning manager can soft-delete
+            
             if (lead.ManagerId != request.ManagerId)
                 return false;
 

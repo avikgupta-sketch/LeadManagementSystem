@@ -25,7 +25,7 @@ public class Lead : BaseEntity
 
     public int AssignedAgentId { get; set; }
 
-    public int ManagerId { get; set; }   // 🔥 important fix
+    public int ManagerId { get; set; }   
 
     public bool IsDeleted { get; set; } = false;
 

@@ -21,7 +21,7 @@ public class UserController : Controller
     private int CurrentUserId() =>
         int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-    // ---------- ADMIN: MANAGERS ----------
+    
 
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Managers()
@@ -85,7 +85,7 @@ public class UserController : Controller
         return RedirectToAction("Managers");
     }
 
-    // ---------- MANAGER: AGENTS ----------
+    //  MANAGER: AGENTS 
 
     [Authorize(Roles = "Manager")]
     public async Task<IActionResult> Agents()

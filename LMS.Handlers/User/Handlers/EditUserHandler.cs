@@ -28,16 +28,16 @@ public class EditUserHandler : IRequestHandler<EditUserCommand, bool>
             if (user == null)
                 return false;
 
-            // 🔴 Authorization: requester must be Admin (manager edit) OR
-            //    requester must be the manager of the agent being edited.
+            
+            
             var requester = await _userManager.Users
                 .FirstOrDefaultAsync(u => u.Id == request.RequestedById, cancellationToken);
 
             if (requester == null)
                 return false;
 
-            // Admin (no ManagerId) can edit Managers (users whose ManagerId == null and not the admin himself)
-            // Manager can edit only their own Agents (user.ManagerId == requester.Id)
+            
+            
             bool requesterIsAdmin = requester.ManagerId == null
                                     && (await _userManager.IsInRoleAsync(requester, "Admin"));
 
@@ -50,7 +50,7 @@ public class EditUserHandler : IRequestHandler<EditUserCommand, bool>
             if (!isAdminEditingManager && !isManagerEditingOwnAgent)
                 return false;
 
-            // 🔥 Update only FullName + Email (NEVER password — per requirements)
+            //  Update Fname, email
             user.FullName = dto.FullName;
             user.Email = dto.Email;
             user.UserName = dto.Email;

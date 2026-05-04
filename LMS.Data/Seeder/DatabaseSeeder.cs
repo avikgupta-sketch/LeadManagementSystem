@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LMS.Models.Entities;
+﻿using LMS.Models.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 
@@ -16,7 +11,7 @@ public static class DatabaseSeeder
         RoleManager<ApplicationRole> roleManager,
         IConfiguration config)
     {
-        // 🔹 Roles
+        // Roles
         string[] roles = { "Admin", "Manager", "Agent" };
 
         foreach (var role in roles)
@@ -27,7 +22,7 @@ public static class DatabaseSeeder
             }
         }
 
-        // 🔹 Admin Config
+        // Admin Config
         var adminSection = config.GetSection("AdminSeed");
 
         var email = adminSection["Email"] ?? "admin@lms.com";

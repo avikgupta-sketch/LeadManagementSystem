@@ -27,7 +27,7 @@ public class GetLeadsDataTableHandler
         // Base query — filter by role
         var query = _context.Leads
             .AsNoTracking()
-            .IgnoreQueryFilters()                      // we apply soft-delete manually below
+            .IgnoreQueryFilters()                      
             .Where(l => !l.IsDeleted)
             .Where(l => request.IsManager
                 ? l.ManagerId == request.UserId
@@ -41,8 +41,7 @@ public class GetLeadsDataTableHandler
         {
             var s = req.SearchValue.ToLower();
 
-            // Status enum is resolved in memory first, then passed to SQL
-            // because EF Core cannot translate .ToString() on an enum to SQL Server
+            
             var matchingStatuses = Enum.GetValues<LeadStatus>()
                 .Where(e => e.ToString().ToLower().Contains(s))
                 .ToList();
@@ -51,7 +50,7 @@ public class GetLeadsDataTableHandler
                 l.Name.ToLower().Contains(s) ||
                 l.Email.ToLower().Contains(s) ||
                 l.PhoneNumber.ToLower().Contains(s) ||
-                matchingStatuses.Contains(l.Status));  // ✅ EF Core CAN translate this
+                matchingStatuses.Contains(l.Status));  
         }
 
         // Total after search
@@ -65,7 +64,7 @@ public class GetLeadsDataTableHandler
             ("email", "asc") => query.OrderBy(l => l.Email),
             ("email", "desc") => query.OrderByDescending(l => l.Email),
             ("name", "desc") => query.OrderByDescending(l => l.Name),
-            _ => query.OrderBy(l => l.Name)   // default: Name asc
+            _ => query.OrderBy(l => l.Name)   
         };
 
         // Page

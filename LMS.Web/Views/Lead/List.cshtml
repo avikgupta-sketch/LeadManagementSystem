@@ -8,14 +8,14 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
 <style>
     #leadsTable_length select {
-        min-width: 65px !important; /* Gives enough space for 3-digit numbers if needed */
-        padding-right: 28px !important; /* Ensures the arrow doesn't overlap the text */
+        min-width: 65px !important; 
+        padding-right: 28px !important; 
         padding-left: 10px !important;
-        appearance: none; /* Helps normalize look across browsers */
-        background-position: right 8px center; /* Positions the Bootstrap arrow correctly */
+        appearance: none; 
+        background-position: right 8px center; 
     }
 
-    /* Optional: Add a little space between the "Show" text and the dropdown */
+    
     .dataTables_length label {
         display: flex;
         align-items: center;
@@ -24,6 +24,18 @@
         color: #6b7280;
     }
 
+    #leadsTable_filter input {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 6px 12px;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+        #leadsTable_filter input:focus {
+            border-color: #6366f1; 
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
 </style>
 <div class="lms-topbar">
     <div>
@@ -137,6 +149,6 @@
         }
     </script>
 
-    <!-- Hidden antiforgery token for AJAX calls -->
+   
     @Html.AntiForgeryToken()
 }

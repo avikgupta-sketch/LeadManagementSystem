@@ -22,7 +22,7 @@ public class EditLeadHandler : IRequestHandler<EditLeadCommand, bool>
         {
             var dto = request.Dto;
 
-            // Null safety + validation
+            
             if (string.IsNullOrWhiteSpace(dto.Name) ||
                 string.IsNullOrWhiteSpace(dto.Description) ||
                 string.IsNullOrWhiteSpace(dto.PhoneNumber) ||
@@ -38,7 +38,7 @@ public class EditLeadHandler : IRequestHandler<EditLeadCommand, bool>
             if (lead == null)
                 return false;
 
-            // 🔴 Cannot edit terminal status leads
+            //  Cannot edit terminal status leads
             if (lead.Status == LeadStatus.Converted ||
                 lead.Status == LeadStatus.Closed ||
                 lead.Status == LeadStatus.Rejected)
@@ -46,7 +46,7 @@ public class EditLeadHandler : IRequestHandler<EditLeadCommand, bool>
                 return false;
             }
 
-            // 🔴 Authorization
+            // Authorization
             if (request.IsManager)
             {
                 if (lead.ManagerId != request.RequestedById)

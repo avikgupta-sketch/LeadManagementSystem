@@ -7,8 +7,8 @@ public class DataTableRequestDto
     public int Start { get; set; }
     public int Length { get; set; }
     public string? SearchValue { get; set; }
-    public string? OrderColumn { get; set; }   // e.g. "Name", "Status"
-    public string? OrderDir { get; set; }       // "asc" or "desc"
+    public string? OrderColumn { get; set; }   
+    public string? OrderDir { get; set; }       
 }
 
 // What the server sends back to DataTables

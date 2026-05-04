@@ -23,7 +23,7 @@ public class CreateLeadHandler : IRequestHandler<CreateLeadCommand, bool>
         {
             var dto = request.Dto;
 
-            // 🔴 DATA VALIDATION
+            // DATA VALIDATION
             if (string.IsNullOrWhiteSpace(dto.Name) ||
                 string.IsNullOrWhiteSpace(dto.Description) ||
                 string.IsNullOrWhiteSpace(dto.PhoneNumber) ||
@@ -33,14 +33,14 @@ public class CreateLeadHandler : IRequestHandler<CreateLeadCommand, bool>
                 return false;
             }
 
-            // 🔴 VALIDATION: agent must exist
+            
             var agent = await _context.Users
                 .FirstOrDefaultAsync(u => u.Id == dto.AssignedAgentId, cancellationToken);
 
             if (agent == null)
                 return false;
 
-            // 🔴 AUTHORIZATION: agent must belong to the manager that owns this lead
+            
             if (agent.ManagerId != request.ManagerId)
                 return false;
 

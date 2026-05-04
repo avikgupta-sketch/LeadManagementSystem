@@ -37,7 +37,7 @@ public class DashboardController : Controller
             return View(data);
         }
 
-        // Should not reach here — Admin is restricted by role attribute.
+        
         return RedirectToAction("Managers", "User");
     }
 }

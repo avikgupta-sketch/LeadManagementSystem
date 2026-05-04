@@ -20,7 +20,7 @@ public class GetManagerDashboardHandler
         GetManagerDashboardQuery request,
         CancellationToken cancellationToken)
     {
-        // 🔴 Soft-delete filter is global on ApplicationUser & Lead, so already excluded.
+        
         var totalAgents = await _context.Users
             .Where(u => u.ManagerId == request.ManagerId)
             .CountAsync(cancellationToken);

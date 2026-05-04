@@ -29,11 +29,11 @@ public class ReassignLeadHandler : IRequestHandler<ReassignLeadCommand, bool>
             if (lead == null)
                 return false;
 
-            // 🔴 AUTHORIZATION: this manager must own the lead
+            
             if (lead.ManagerId != request.ManagerId)
                 return false;
 
-            // 🔴 EDIT RESTRICTION: cannot reassign a terminal-status lead
+            
             if (lead.Status == LeadStatus.Converted ||
                 lead.Status == LeadStatus.Closed ||
                 lead.Status == LeadStatus.Rejected)
@@ -41,7 +41,7 @@ public class ReassignLeadHandler : IRequestHandler<ReassignLeadCommand, bool>
                 return false;
             }
 
-            // 🔴 CONSISTENCY: new agent must belong to the same manager
+            
             var agent = await _context.Users
                 .FirstOrDefaultAsync(
                     u => u.Id == dto.NewAgentId && u.ManagerId == request.ManagerId,
@@ -57,14 +57,14 @@ public class ReassignLeadHandler : IRequestHandler<ReassignLeadCommand, bool>
             var oldAgent = await _context.Users
     .FirstOrDefaultAsync(u => u.Id == oldAgentId, cancellationToken);
 
-            string oldAgentName = oldAgent?.FullName ?? $"Agent {oldAgentId}";  // fallback to ID if not found
-            string newAgentName = agent.FullName;  // agent is already fetched above
+            string oldAgentName = oldAgent?.FullName ?? "Unknown Agent";  
+            string newAgentName = agent.FullName;  
 
             lead.AssignedAgentId = dto.NewAgentId;
             lead.UpdatedById = request.ManagerId;
             lead.UpdatedDate = DateTime.UtcNow;
 
-            // 🔥 Audit remark (status itself does not change)
+            //  Audit remark 
             var remark = new LeadRemark
             {
                 LeadId = lead.Id,

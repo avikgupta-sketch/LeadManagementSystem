@@ -6,7 +6,7 @@ namespace LMS.Handlers.Users.Queries;
 public class GetUsersByRoleQuery : IRequest<List<EditUserDto>>
 {
     public string Role { get; set; }
-    public int? ManagerId { get; set; }   // only used when Role == "Agent"
+    public int? ManagerId { get; set; }   
 
     public GetUsersByRoleQuery(string role, int? managerId = null)
     {

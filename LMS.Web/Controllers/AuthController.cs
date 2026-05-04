@@ -55,7 +55,7 @@ public class AuthController : Controller
         var user = await _userManager.FindByEmailAsync(dto.Email);
         var roles = await _userManager.GetRolesAsync(user);
 
-        // 🔥 Role-based redirect
+        // Role-based redirect
         if (roles.Contains("Admin"))
             return RedirectToAction("Managers", "User");
 

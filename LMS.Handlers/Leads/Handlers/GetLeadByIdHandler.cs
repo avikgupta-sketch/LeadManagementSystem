@@ -27,8 +27,7 @@ public class GetLeadByIdHandler : IRequestHandler<GetLeadByIdQuery, LeadDetailDt
         if (lead == null)
             return null;
 
-        // Pull the agent ourselves (ignoring the user query filter) so soft-deleted
-        // agents still resolve to a name instead of "Unknown".
+        
         var agent = await _context.Users
             .AsNoTracking()
             .IgnoreQueryFilters()

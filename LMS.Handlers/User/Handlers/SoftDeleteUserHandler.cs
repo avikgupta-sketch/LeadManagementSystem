@@ -44,9 +44,9 @@ public class SoftDeleteUserHandler : IRequestHandler<SoftDeleteUserCommand, Oper
             if (requester == null)
                 return OperationResult.Fail("Requester not found.");
 
-            // ───────────────────────────────────────────────────────────
+            
             // ADMIN deleting a MANAGER  →  3-level rule
-            // ───────────────────────────────────────────────────────────
+            
             if (requester.ManagerId == null && user.ManagerId == null)
             {
                 // Level 1: any of the manager's agents have OPEN leads → block
@@ -76,9 +76,7 @@ public class SoftDeleteUserHandler : IRequestHandler<SoftDeleteUserCommand, Oper
                 return OperationResult.Ok();
             }
 
-            // ───────────────────────────────────────────────────────────
-            // MANAGER deleting an AGENT  →  block if open leads
-            // ───────────────────────────────────────────────────────────
+            // MANAGER deleting an AGENT  block if open leads
             if (user.ManagerId == requester.Id)
             {
                 bool hasOpenLeads = await _context.Leads

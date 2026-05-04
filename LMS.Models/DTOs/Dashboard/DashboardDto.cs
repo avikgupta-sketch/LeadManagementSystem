@@ -2,7 +2,7 @@ namespace LMS.Models.DTOs.Dashboard;
 
 public class DashboardDto
 {
-    public int TotalAgents { get; set; }   // 🔥 used by Manager dashboard
+    public int TotalAgents { get; set; }   // used by manager dashboard 
 
     public int TotalLeads { get; set; }
 

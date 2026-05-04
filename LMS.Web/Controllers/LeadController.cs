@@ -26,9 +26,8 @@ public class LeadController : Controller
     private int CurrentUserId() =>
         int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-    // ─────────────────────────────────────────────────────────
+    
     // CREATE
-    // ─────────────────────────────────────────────────────────
 
     [HttpGet]
     [Authorize(Roles = "Manager,Agent")]
@@ -54,7 +53,7 @@ public class LeadController : Controller
         int userId = CurrentUserId();
         int managerId = userId;
 
-        // Agent → auto-assign to self, find their manager
+        // Agent auto-assign to self, find their manager
         if (User.IsInRole("Agent"))
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
@@ -91,9 +90,8 @@ public class LeadController : Controller
         return RedirectToAction(User.IsInRole("Agent") ? "MyLeads" : "Index");
     }
 
-    // ─────────────────────────────────────────────────────────
+    
     // LIST  — same shared view for Agent (MyLeads) & Manager (Index)
-    // ─────────────────────────────────────────────────────────
 
     [Authorize(Roles = "Agent")]
     public  IActionResult MyLeads()
@@ -109,13 +107,7 @@ public class LeadController : Controller
         return View("List");
     }
 
-    // ─────────────────────────────────────────────────────────
-    // DETAIL  — combined View + Edit page (all editable fields on the
-    //          left, status/reassign panel on the right, audit log
-    //          underneath). Both roles use the same view; the right
-    //          panel switches based on role.
-    // ─────────────────────────────────────────────────────────
-
+    
     [Authorize(Roles = "Manager,Agent")]
     public async Task<IActionResult> Detail(int id)
     {
@@ -123,7 +115,7 @@ public class LeadController : Controller
         if (lead == null)
             return NotFound();
 
-        // For Manager: provide list of their agents for the Reassign dropdown
+       
         if (User.IsInRole("Manager"))
         {
             var agents = await _mediator.Send(new GetAgentsByManagerQuery(CurrentUserId()));
@@ -137,7 +129,7 @@ public class LeadController : Controller
         return View(lead);
     }
 
-    // POST coming from the "edit fields" form on the Detail page.
+    
     [HttpPost]
     [Authorize(Roles = "Manager,Agent")]
     [ValidateAntiForgeryToken]
@@ -166,9 +158,6 @@ public class LeadController : Controller
         return RedirectToAction("Detail", new { id = dto.Id });
     }
 
-    // ─────────────────────────────────────────────────────────
-    // STATUS UPDATE  (Agent only) — posted from Detail page
-    // ─────────────────────────────────────────────────────────
     [HttpPost]
     [Authorize(Roles = "Agent")]
     [ValidateAntiForgeryToken]
@@ -190,9 +179,6 @@ public class LeadController : Controller
         return RedirectToAction("Detail", new { id = dto.LeadId });
     }
 
-    // ─────────────────────────────────────────────────────────
-    // REASSIGN  (Manager only) — posted from Detail page
-    // ─────────────────────────────────────────────────────────
     [HttpPost]
     [Authorize(Roles = "Manager")]
     [ValidateAntiForgeryToken]
@@ -206,11 +192,7 @@ public class LeadController : Controller
 
         return RedirectToAction("Detail", new { id = dto.LeadId });
     }
-
-    // ─────────────────────────────────────────────────────────
-    // DELETE  (Manager only)
-    // ─────────────────────────────────────────────────────────
-    [HttpPost]
+ [HttpPost]
     [Authorize(Roles = "Manager")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
@@ -218,12 +200,11 @@ public class LeadController : Controller
         var ok=await _mediator.Send(new SoftDeleteLeadCommand(id, CurrentUserId()));
         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             return Json(new { success = ok });
+        if (!ok) TempData["Error"] = "Could not delete lead.";
         return RedirectToAction("Index");
     }
 
-    // ─────────────────────────────────────────────────────────
-    // DATATABLE — Server-side JSON endpoint
-    // ─────────────────────────────────────────────────────────
+   
     [HttpPost]
     [Authorize(Roles = "Manager,Agent")]
     public async Task<IActionResult> LeadData()
